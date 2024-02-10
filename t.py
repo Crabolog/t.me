@@ -51,75 +51,74 @@ async def bot():
                         text = data['result'][-1]['message']['text']
 
                         #chat check
-                        if chat_id in known:
+                        
                             
                         #status check
-                            if text in status:
-                                current_zrada_level = int(current_zrada_level)
-                                if int(current_zrada_level) > 150:
-                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради: '+str(current_zrada_level)+'\nКритично низький рiвень перемоги.'}
-                                    await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
-                                elif current_zrada_level > 50:
-                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради: '+str(current_zrada_level)+'\nВисокий рiвень.'}
-                                    await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
-                                elif int(current_zrada_level) <25:
-                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради: '+str(current_zrada_level)+'\nНизький.'}
-                                    await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
-                                elif int(current_zrada_level) <50:
-                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради: '+str(current_zrada_level)+'\nПомiрний.'}
-                                    await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
-
-                            #zelensky
-                            elif text in zelensky:
-                                txt = random.choice(ze_list)
-                                message = {'chat_id':chat_id, 'user_id':user_id,'text':txt}
+                        if text in status:
+                            current_zrada_level = int(current_zrada_level)
+                            if int(current_zrada_level) > 150:
+                                message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради: '+str(current_zrada_level)+'\nКритично низький рiвень перемоги.'}
+                                await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                            elif current_zrada_level > 50:
+                                message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради: '+str(current_zrada_level)+'\nВисокий рiвень.'}
+                                await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                            elif int(current_zrada_level) <25:
+                                message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради: '+str(current_zrada_level)+'\nНизький.'}
+                                await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                            elif int(current_zrada_level) <50:
+                                message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради: '+str(current_zrada_level)+'\nПомiрний.'}
                                 await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
 
-                
-                            elif text in zrada:
-                                current_zrada_level = int(current_zrada_level)+change
-                                print('here')
-                                print(current_zrada_level)
-                                current_zrada_level = str(current_zrada_level)
-                                cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
-                                message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради росте до '+current_zrada_level+'.\nРiвень перемоги впав.'}
-                                await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
-                                
+                        #zelensky
+                        elif text in zelensky:
+                            txt = random.choice(ze_list)
+                            message = {'chat_id':chat_id, 'user_id':user_id,'text':txt}
+                            await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
 
-                            elif text in peremoga:
-                                current_zrada_level = int(current_zrada_level)-change
-                                current_zrada_level = str(current_zrada_level)
-                                cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
-                                message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради впав до '+current_zrada_level+'.\nРiвень перемоги вирiс.'}
-                                await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
-                                
+            
+                        elif text in zrada:
+                            current_zrada_level = int(current_zrada_level)+change
+                            print('here')
+                            print(current_zrada_level)
+                            current_zrada_level = str(current_zrada_level)
+                            cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
+                            message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради росте до '+current_zrada_level+'.\nРiвень перемоги впав.'}
+                            await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
                             
-                            elif text not in zrada and text not in peremoga:
-                                words = text.split()
-                                for word in words:
-                                    if word in zrada:
-                                        message = {'chat_id':chat_id, 'user_id':user_id,'text':'Менi почулась зрада?','reply_to_message_id':message_id}
-                                        await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
-                                    elif word in peremoga:
-                                        message = {'chat_id':chat_id, 'user_id':user_id,'text':'Це вже перемога, чи все ще зрада?','reply_to_message_id':message_id}
-                                        await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
-                                    elif word in zrada_mention:
-                                        message = {'chat_id':chat_id, 'user_id':user_id,'text':'Десь бачу зраду, де вона.'}
-                                        await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
-                                    elif word in peremoga_mention:
-                                        message = {'chat_id':chat_id, 'user_id':user_id,'text':'i де та перемога...','reply_to_message_id':message_id}
-                                        await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
-                                    elif word in bmw:
-                                        message = {'chat_id':chat_id, 'user_id':user_id,'text':'Беха топ','reply_to_message_id':message_id}
-                                        await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
-                                    elif word in mamka:
-                                        txt = random.choice(mamka_response)
-                                        message = {'chat_id':chat_id, 'user_id':user_id,'text':txt,'reply_to_message_id':message_id}
-                                        await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
-                                    else:
-                                        pass
-                        else:
-                            pass
+
+                        elif text in peremoga:
+                            current_zrada_level = int(current_zrada_level)-change
+                            current_zrada_level = str(current_zrada_level)
+                            cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
+                            message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради впав до '+current_zrada_level+'.\nРiвень перемоги вирiс.'}
+                            await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                            
+                        
+                        elif text not in zrada and text not in peremoga:
+                            words = text.split()
+                            for word in words:
+                                if word in zrada:
+                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Менi почулась зрада?','reply_to_message_id':message_id}
+                                    await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                                elif word in peremoga:
+                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Це вже перемога, чи все ще зрада?','reply_to_message_id':message_id}
+                                    await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                                elif word in zrada_mention:
+                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Десь бачу зраду, де вона.'}
+                                    await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                                elif word in peremoga_mention:
+                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'i де та перемога...','reply_to_message_id':message_id}
+                                    await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                                elif word in bmw:
+                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Беха топ','reply_to_message_id':message_id}
+                                    await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                                elif word in mamka:
+                                    txt = random.choice(mamka_response)
+                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':txt,'reply_to_message_id':message_id}
+                                    await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                                else:
+                                    pass
+                        
         except Exception as e:
              async with aiohttp.ClientSession() as session:
                 chat_id = '267601623'
