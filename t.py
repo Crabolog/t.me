@@ -5,8 +5,9 @@ import aiohttp
 import random
 loop = asyncio.new_event_loop()
 import time
+import re
 import psycopg2
-from  dict import ze_list, zrada, zelensky, zrada_mention, peremoga, peremoga_mention, pu_list, putin, bmw, mamka,mamka_response, status
+from  dict import ze_list, zrada, zelensky, zrada_mention, peremoga, peremoga_mention, pu_list, putin, bmw, mamka,mamka_response, status, mc_chicken 
 
 conn = psycopg2.connect(database="neondb",
 host="ep-lucky-sea-840602.eu-central-1.aws.neon.tech",
@@ -28,7 +29,7 @@ async def bot():
         cursor.execute("SELECT * FROM zrada_level WHERE id = 1")
         current_zrada_level = cursor.fetchone()[2]
         change = random.randint(1,21)
-        time.sleep(0.5)
+        time.sleep(0.7)
         try:
             
             async with aiohttp.ClientSession() as session:
@@ -38,7 +39,7 @@ async def bot():
                     offset = data['result'][-1]['update_id']
 
                     if update_id == update:
-                        time.sleep(1)
+                        time.sleep(1.3)
                         pass
 
                     elif update_id != update:
@@ -51,9 +52,9 @@ async def bot():
                         text = data['result'][-1]['message']['text']
 
                         #chat check
-                        
                             
                         #status check
+                            
                         if text in status:
                             current_zrada_level = int(current_zrada_level)
                             if int(current_zrada_level) > 150:
@@ -74,9 +75,16 @@ async def bot():
                             txt = random.choice(ze_list)
                             message = {'chat_id':chat_id, 'user_id':user_id,'text':txt}
                             await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                        
+                        #mc_chicken
+                        elif text in mc_chicken:
+                            txt = random.randint(1,51)
+                            message = {'chat_id':chat_id, 'user_id':user_id,'text':'Эквiвалент у макчiкенах: '+str(txt)}
+                            await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                            
 
             
-                        elif text in zrada:
+                        elif re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", text) in zrada:
                             current_zrada_level = int(current_zrada_level)+change
                             print('here')
                             print(current_zrada_level)
@@ -86,7 +94,7 @@ async def bot():
                             await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
                             
 
-                        elif text in peremoga:
+                        elif re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", text) in peremoga:
                             current_zrada_level = int(current_zrada_level)-change
                             current_zrada_level = str(current_zrada_level)
                             cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
@@ -95,7 +103,7 @@ async def bot():
                             
                         
                         elif text not in zrada and text not in peremoga:
-                            words = text.split()
+                            words = re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", text).split()
                             for word in words:
                                 if word in zrada:
                                     message = {'chat_id':chat_id, 'user_id':user_id,'text':'Менi почулась зрада?','reply_to_message_id':message_id}
@@ -118,7 +126,7 @@ async def bot():
                                     await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
                                 else:
                                     pass
-                        
+                    
         except Exception as e:
              async with aiohttp.ClientSession() as session:
                 chat_id = '267601623'
