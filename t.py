@@ -6,6 +6,7 @@ import random
 loop = asyncio.new_event_loop()
 import time
 import psycopg2
+from . dict import ze_list, zrada, zelensky, zrada_mention, peremoga, peremoga_mention, pu_list, putin, bmw, mamka,mamka_response, status
 
 conn = psycopg2.connect(database="neondb",
 host="ep-lucky-sea-840602.eu-central-1.aws.neon.tech",
@@ -13,35 +14,8 @@ user="Crabolog",
 password="EF6TAl7jwbRu",
 port="5432")
 chat = '-1002092175489'
-
-
-
 tel_token = '6694398809:AAErdp4f0KRoWJ-8F8daRzwmXvl3vJClBo8'
 tel_api = 'https://api.telegram.org/bot'
-zrada = ['@ZradaLevelsBot Зрада','@ZradaLevelsBot зрада','@ZradaLevelsBot Зрада!','@ZradaLevelsBot зрада!','@ZradaLevelsBot zrada!',
-         'Зрада', 'зрада', 'Zrada','Zrada!', 'zrada!', 'Зрада!', 'Зрада.','зрада!','зрада!']
-
-
-peremoga = ['@ZradaLevelsBot Перемога','@ZradaLevelsBot перемога', '@ZradaLevelsBot peremoga', '@ZradaLevelsBot Перемога!',
-             '@ZradaLevelsBot перемога!','перемога!', 'Перемога!', 
-            'перемога', 'Перемога', 'перемога.', 'Перемога.', 'peremoga', 'Peremoga', 'победа', 'Победа','Перемога!']
-
-zrada_mention = ['зрады','зраду','зрадой','зради','зраде','Зрады','Зраду','Зрадой','Зради','Зраде','зрада,','Зрада...','зраду,','зрадой,','зрадой.','зрадой']
-peremoga_mention = ['перемогой','перемогу','перемоги','перемоге','перемога,','перемоги.','Перемога,','перемогой,','перемога!','Перемога,','перемога.',]
-status = ['/status', '/status@ZradaLevelsBot']
-zelensky = ('/ze_bingo','/ze_bingo@ZradaLevelsBot')
-ze_list = ['Фифа','Комик-гомик','Фродо','Сопляк','Фуфлыжка','Шмыга','Литтл','Моссадик','Полторашка','Низькосракий','Комик хуев','гомик','Криворожский имбицил']
-putin = []
-pu_list = ['Это результат проекта Австро-Венгерского генштаба',
-           'Это Бандера и Шушкевич. И этих людей сделали национальными героями. Вот в чем проблема!',
-           'Просто поляки отказались, заигрались и вынудили Гитлера начать Вторую мировую',
-           'Трудно растить детей в тех условиях, которые в некоторых странах Запада сегодня создаются. Извините, общие туалеты для мальчиков и девочек, еще что‑то такое. ',
-           '8 лет бомбили Донбасс...',
-           'Во всем этом виноват коллективный Запад.',
-           'Нато нас обмануло.',
-           '','']
-bmw = ['беха','беху','бехи','бехе','бехой','Беха','беха,','бехи,','бехой,']
-mamka = ['мамка','Мамка','мамку','мамке','мамки','мамкой','мамки','мамаша','мамашу','Мамку','Мамке','Мамки','Мамкой','мамки,','мамкой,','мамка.','мамки.','мамку','мамке.']
 
 async def bot():
     update = None
@@ -133,7 +107,8 @@ async def bot():
                                     message = {'chat_id':chat_id, 'user_id':user_id,'text':'Беха топ','reply_to_message_id':message_id}
                                     await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
                                 elif word in mamka:
-                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Шутка про мамку!\nВиу, виу, виу!','reply_to_message_id':message_id}
+                                    txt = random.choice(mamka_response)
+                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':txt,'reply_to_message_id':message_id}
                                     await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
                                 else:
                                     pass
