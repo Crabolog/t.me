@@ -6,7 +6,7 @@ import random
 loop = asyncio.new_event_loop()
 import time
 import psycopg2
-from   dict import ze_list, zrada, zelensky, zrada_mention, peremoga, peremoga_mention, pu_list, putin, bmw, mamka,mamka_response, status
+from  dict import ze_list, zrada, zelensky, zrada_mention, peremoga, peremoga_mention, pu_list, putin, bmw, mamka,mamka_response, status
 
 conn = psycopg2.connect(database="neondb",
 host="ep-lucky-sea-840602.eu-central-1.aws.neon.tech",
@@ -114,8 +114,16 @@ async def bot():
                                     pass
             
         except Exception as e:
-            print(e)
-            pass
+             async with aiohttp.ClientSession() as session:
+                chat_id = '267601623'
+                user_id = '267601623'
+                async with session.get(tel_api+tel_token+'/getUpdates?offset='+f"{offset}",timeout=5) as resp:
+                    data =  await resp.json()
+                    message = {'chat_id':chat_id, 'user_id':user_id,'text':e}
+                    await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+            
+                print(e)
+                pass
         conn.commit()
         
 
