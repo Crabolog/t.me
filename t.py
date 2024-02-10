@@ -6,7 +6,7 @@ import random
 loop = asyncio.new_event_loop()
 import time
 import psycopg2
-from . dict import ze_list, zrada, zelensky, zrada_mention, peremoga, peremoga_mention, pu_list, putin, bmw, mamka,mamka_response, status
+from   dict import ze_list, zrada, zelensky, zrada_mention, peremoga, peremoga_mention, pu_list, putin, bmw, mamka,mamka_response, status
 
 conn = psycopg2.connect(database="neondb",
 host="ep-lucky-sea-840602.eu-central-1.aws.neon.tech",
