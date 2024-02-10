@@ -126,7 +126,7 @@ async def bot():
                 user_id = '267601623'
                 async with session.get(tel_api+tel_token+'/getUpdates?offset='+f"{offset}",timeout=5) as resp:
                     data =  await resp.json()
-                    message = {'chat_id':chat_id, 'user_id':user_id,'text':e+Exception}
+                    message = {'chat_id':chat_id, 'user_id':user_id,'text':e}
                     await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
             
                 print(e)
