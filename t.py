@@ -7,7 +7,7 @@ loop = asyncio.new_event_loop()
 import time
 import re
 import psycopg2
-from  dict import ze_list, zrada, zelensky, zrada_mention, peremoga, peremoga_mention, pu_list, putin, bmw, mamka,mamka_response, status, mc_chicken 
+from  dict import ze_list, zrada, zelensky, zrada_or_peremoga, zrada_mention, peremoga, peremoga_mention, pu_list, putin, bmw, mamka,mamka_response, status, mc_chicken 
 
 conn = psycopg2.connect(database="neondb",
 host="ep-lucky-sea-840602.eu-central-1.aws.neon.tech",
@@ -82,12 +82,26 @@ async def bot():
                             message = {'chat_id':chat_id, 'user_id':user_id,'text':'Эквiвалент у макчiкенах: '+str(txt)}
                             await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
                             
+                        elif re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", text) in zrada_or_peremoga:
+                            chance = random.randint(1, 11)
+                            if chance <5:
+                                print(current_zrada_level)
+                                current_zrada_level = str(current_zrada_level)
+                                cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
+                                message = {'chat_id':chat_id, 'user_id':user_id,'text':'Схоже на зраду.\nРiвень зради росте до '+current_zrada_level+'.\nРiвень перемоги впав.','reply_to_message_id':message_id}
+                                await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                            elif chance >5:
+                                current_zrada_level = int(current_zrada_level)-change
+                                current_zrada_level = str(current_zrada_level)
+                                cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
+                                message = {'chat_id':chat_id, 'user_id':user_id,'text':'Схоже на перемогу!\nРiвень зради впав до '+current_zrada_level+'.\nРiвень перемоги вирiс.','reply_to_message_id':message_id}
+                                await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                            
+                                
 
             
                         elif re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", text) in zrada:
                             current_zrada_level = int(current_zrada_level)+change
-                            print('here')
-                            print(current_zrada_level)
                             current_zrada_level = str(current_zrada_level)
                             cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
                             message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради росте до '+current_zrada_level+'.\nРiвень перемоги впав.'}
@@ -102,7 +116,7 @@ async def bot():
                             await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
                             
                         
-                        elif text not in zrada and text not in peremoga:
+                        elif text not in zrada and text not in peremoga and text not in zrada_or_peremoga:
                             words = re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", text).split()
                             for word in words:
                                 if word in zrada:
