@@ -9,7 +9,7 @@ conn = psycopg2.connect(database="neondb",
 cursor = conn.cursor()
 text = '3'
 
-cursor.execute("update zrada_level set value = 3  WHERE id = 1")
+cursor.execute("update zrada_level set value = 0  WHERE id = 1")
 cursor.execute("SELECT * FROM zrada_level ")
 print(cursor.fetchone())
 conn.commit()
