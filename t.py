@@ -3,24 +3,14 @@ import json
 import asyncio
 import aiohttp
 import random
-loop = asyncio.new_event_loop()
 import time
 import re
 import psycopg2
-from  dict import ze_list, zrada, zelensky, zrada_or_peremoga, zrada_mention, peremoga, peremoga_mention, pu_list, putin, bmw, mamka,mamka_response, status, mc_chicken 
+from  dict import *
+from settings import *
+loop = asyncio.new_event_loop()
 
-conn = psycopg2.connect(database="neondb",
-host="ep-lucky-sea-840602.eu-central-1.aws.neon.tech",
-user="Crabolog",
-password="EF6TAl7jwbRu",
-port="5432")
-chat = '-1002092175489'
-tel_token = '6694398809:AAErdp4f0KRoWJ-8F8daRzwmXvl3vJClBo8'
-tel_api = 'https://api.telegram.org/bot'
-my_id = '67601623'
-our_chat_id = '-1001091522875'
 
-known = ['-1001091522875','67601623']
 async def bot():
     update = None
     offset = 1
@@ -51,10 +41,7 @@ async def bot():
                         message_id = data['result'][-1]['message']['message_id']
                         text = data['result'][-1]['message']['text']
 
-                        #chat check
-                            
-                        #status check
-                            
+                        #status check    
                         if text in status:
                             current_zrada_level = int(current_zrada_level)
                             if int(current_zrada_level) > 150:
@@ -81,6 +68,7 @@ async def bot():
                             txt = random.randint(1,51)
                             message = {'chat_id':chat_id, 'user_id':user_id,'text':'Эквiвалент у макчiкенах: '+str(txt)}
                             await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                        #putin
                             
                         elif re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", text) in zrada_or_peremoga:
                             chance = random.randint(1, 11)
@@ -142,13 +130,12 @@ async def bot():
                                     pass
                     
         except Exception as e:
-             e = str(e)
              async with aiohttp.ClientSession() as session:
-                chat_id = '267601623'
-                user_id = '267601623'
+                chat_id = my_id
+                user_id =  my_id
                 async with session.get(tel_api+tel_token+'/getUpdates?offset='+f"{offset}",timeout=5) as resp:
                     data =  await resp.json()
-                    message = {'chat_id':chat_id, 'user_id':user_id,'text':e}
+                    message = {'chat_id':chat_id, 'user_id':user_id,'text':str(e)}
                     await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
             
                 print(e)
