@@ -142,6 +142,7 @@ async def bot():
                                     pass
                     
         except Exception as e:
+             e = str(e)
              async with aiohttp.ClientSession() as session:
                 chat_id = '267601623'
                 user_id = '267601623'
