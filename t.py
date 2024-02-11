@@ -145,5 +145,9 @@ async def bot():
 
 
 if __name__=='__main__':
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(bot())
+     while True:
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(bot())
+        time.sleep(5)
+    
+    
