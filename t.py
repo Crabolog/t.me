@@ -15,24 +15,32 @@ loop = asyncio.new_event_loop()
 async def bot():
     update = None
     offset = 1
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM zrada_level WHERE id = 1")
+    current_zrada_level = cursor.fetchone()[2]
+   
+
     event_start = datetime.datetime.now() #datetime.datetime.strptime('2024-02-12 19:43:55.985354', '%Y-%m-%d %H:%M:%S.%f')
     event_end = datetime.datetime.now()
-    abs((event_end - event_start).days)
-    event_end = int(abs)
+    event_start = int(event_start.strftime('%Y%m%d'))
+    event_end = int(event_end.strftime('%Y%m%d'))
+    event_days = event_end-event_start
+    zrada_event = False
+    peremoga_event = False
+
     while True:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM zrada_level WHERE id = 1")
-        current_zrada_level = cursor.fetchone()[2]
+
+        if event_days >1:
+            event_start = datetime.datetime.now()
+            event_start = int(event_start.strftime('%Y%m%d'))
+            zrada_event = False
+            peremoga_event = False
+        elif event_days <=1:
+            pass
+        time.sleep(1)
         zrada_change = random.randint(1,45)
         peremoga_change = random.randint(1,25)
         event_start_chance = random.randint(0,100)
-        if event_end >1:
-            event_start = datetime.datetime.now()
-            zrada_event = False
-            peremoga_event = False
-        elif event_end <=1:
-            pass
-        time.sleep(1)
         try:
             
             async with aiohttp.ClientSession() as session:
@@ -112,56 +120,89 @@ async def bot():
                                 cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
                                 message = {'chat_id':chat_id, 'user_id':user_id,'text':'Схоже на перемогу!\nРiвень зради впав до '+str(current_zrada_level)+'.\nРiвень перемоги вирiс.','reply_to_message_id':message_id}
                                 await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
-                            
-                                
-                #False False
-                #True True
-                #False True
-                #True False
-                                
+                              
                 #zrada change
                         elif re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", text) in zrada:
-                            if zrada_event == False and peremoga_event == False:
 
+                            if zrada_event == False and peremoga_event == False:
+                                print(event_start_chance)
                                 if event_start_chance <=20:
+                                    
                                     event_start = datetime.datetime.now()
-                                    event = True
+                                    zrada_event = True
                                     zrada_change = zrada_change*3
                                     current_zrada_level = int(current_zrada_level)+zrada_change
+                                    current_zrada_level = str(current_zrada_level)
                                     cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
-                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Астрологи оголосили тиждень зради.\nУсі зміни у рівні зради буде подвоєно.\nРiвень зради росте до '+str(current_zrada_level)+'.\nРiвень перемоги впав.\nДякую за увагу'}
+                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Астрологи оголосили тиждень зради.\nУсі зміни у рівні зради буде подвоєно.\nРiвень зради росте до '+current_zrada_level+'.\nРiвень перемоги впав.\nДякую за увагу'}
                                     await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
 
                                 elif event_start_chance >20:
                                     current_zrada_level = int(current_zrada_level)+zrada_change
+                                    current_zrada_level = str(current_zrada_level)
                                     cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
-                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради росте до '+str(current_zrada_level)+'.\nРiвень перемоги впав.'}
+                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради росте до '+current_zrada_level+'.\nРiвень перемоги впав.'}
                                     await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
 
                             elif peremoga_event == True:
                                     current_zrada_level = int(current_zrada_level)+zrada_change
+                                    current_zrada_level = str(current_zrada_level)
                                     cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
-                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Триває тиждень перемоги.\nАле рiвень зради все одно росте до '+str(current_zrada_level)+'.\nРiвень перемоги впав.'}
+                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Триває тиждень перемоги.\nАле рiвень зради все одно росте до '+current_zrada_level+'.\nРiвень перемоги впав.'}
                                     await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
 
                             elif zrada_event == True:
                                     current_zrada_level = int(current_zrada_level)+zrada_change*3
+                                    current_zrada_level = str(current_zrada_level)
                                     cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
-                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Триває тиждень зради.Рiвень зради росте до '+str(current_zrada_level)+'.\nРiвень перемоги впав.'}
+                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Триває тиждень зради.Рiвень зради росте до '+current_zrada_level+'.\nРiвень перемоги впав.'}
                                     await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
 
                             else:
-                                message = {'chat_id':chat_id, 'user_id':user_id,'text':'Перевiр мій код, строка 155'}
+                                message = {'chat_id':chat_id, 'user_id':user_id,'text':'Перевiр мій код, строка 165'}
                                 await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
 
 
                             
                 #peremoga change
                         elif re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", text) in peremoga:
-                            current_zrada_level = int(current_zrada_level)-peremoga_change
-                            cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
-                            message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради впав до '+str(current_zrada_level)+'.\nРiвень перемоги вирiс.'}
-                            await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+
+                            if zrada_event == False and peremoga_event == False:
+                                if event_start_chance <=20:
+                                    event_start = datetime.datetime.now()
+                                    peremoga_event = True
+                                    peremoga_change = peremoga_change*3
+                                    current_zrada_level = int(current_zrada_level)-peremoga_change
+                                    current_zrada_level = str(current_zrada_level)
+                                    cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
+                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Астрологи оголосили тиждень перемоги.\nУсі зміни у рівні перемоги буде подвоєно.\nРiвень зради падає до '+current_zrada_level+'.\nРiвень перемоги виріс.\nДякую за увагу'}
+                                    await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+
+                                elif event_start_chance >20:
+                                    current_zrada_level = int(current_zrada_level)-peremoga_change
+                                    current_zrada_level = str(current_zrada_level)
+                                    cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
+                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради впав до '+current_zrada_level+'.\nРiвень перемоги вирiс.'}
+                                    await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                                    
+                            elif peremoga_event == True:
+                                    peremoga_change = peremoga_change*3
+                                    current_zrada_level = int(current_zrada_level)-peremoga_change
+                                    current_zrada_level = str(current_zrada_level)
+                                    cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
+                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Триває тиждень перемоги.\nРівень зради падає до '+current_zrada_level+'.\nРiвень перемоги виріс.'}
+                                    await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+
+                            elif zrada_event == True:
+                                    current_zrada_level = int(current_zrada_level)-peremoga_change
+                                    current_zrada_level = str(current_zrada_level)
+                                    cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
+                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Триває тиждень зради.Але рівень її рівень попри все падає до '+current_zrada_level+'.\nРiвень перемоги виріс.'}
+                                    await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                            else:
+                                message = {'chat_id':chat_id, 'user_id':user_id,'text':'Перевiр мій код, строка 195'}
+                                await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+
                             
                 #word by word check
                         elif text not in zrada and text not in peremoga and text not in zrada_or_peremoga:
@@ -215,5 +256,3 @@ if __name__=='__main__':
         asyncio.set_event_loop(loop)
         loop.run_until_complete(bot())
         time.sleep(5)
-    
-    
