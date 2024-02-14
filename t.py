@@ -37,7 +37,7 @@ async def bot():
             peremoga_event = False
         elif event_days <=1:
             pass
-        time.sleep(0.7)
+        time.sleep(0.8)
         zrada_change = random.randint(1,45)
         peremoga_change = random.randint(1,25)
         event_start_chance = random.randint(0,100)
@@ -50,7 +50,7 @@ async def bot():
                     offset = data['result'][-1]['update_id']
 
                     if update_id == update:
-                        time.sleep(1)
+                        time.sleep(1.1)
                         pass
 
                     elif update_id != update:
@@ -210,7 +210,7 @@ async def bot():
                             
                 #word by word check
                         elif text not in zrada and text not in peremoga and text not in zrada_or_peremoga:
-                            words = re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", text).split()
+                            words = re.sub(r"[-()#@;:<>{}`+=~|.!?,]", "", text).split()
                             for word in words:
                                 if word in zrada:
                                     message = {'chat_id':chat_id, 'user_id':user_id,'text':random.choice(zrada_mention_replies),'reply_to_message_id':message_id}
