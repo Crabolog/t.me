@@ -65,8 +65,12 @@ async def bot():
                 #status check    
                         if text in status:
                             current_zrada_level = int(current_zrada_level)
-                            if int(current_zrada_level) > 150:
-                                message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради: '+str(current_zrada_level)+'\nКритично низький рiвень перемоги.'}
+                            if int(current_zrada_level) > 250:
+                                message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради: '+str(current_zrada_level)+'\nТотальна зрада.'}
+                                await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+
+                            elif current_zrada_level > 125:
+                                message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради: '+str(current_zrada_level)+'\nС.'}
                                 await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
 
                             elif current_zrada_level > 50:
@@ -232,6 +236,18 @@ async def bot():
                                     txt = random.choice(mamka_response)
                                     message = {'chat_id':chat_id, 'user_id':user_id,'text':txt,'reply_to_message_id':message_id}
                                     await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+
+                                elif word in random_words:
+                                    if event_start_chance <=50:
+                                        txt = random.choice(random_replies)
+                                        message = {'chat_id':chat_id, 'user_id':user_id,'text':txt,'reply_to_message_id':message_id}
+                                        await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                                    elif event_start_chance >50:
+                                        txt = random.choice(random_replies)
+                                        message = {'chat_id':chat_id, 'user_id':user_id,'text':txt}
+                                        await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+
+
 
                                 else:
                                     pass
