@@ -138,8 +138,7 @@ async def bot():
                                     
                                     event_start = datetime.datetime.now()
                                     zrada_event = True
-                                    zrada_change = zrada_change*3
-                                    current_zrada_level = int(current_zrada_level)+zrada_change
+                                    current_zrada_level = int(current_zrada_level)+(zrada_change*2)
                                     current_zrada_level = str(current_zrada_level)
                                     cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
                                     message = {'chat_id':chat_id, 'user_id':user_id,'text':'Астрологи оголосили тиждень зради.\nУсі зміни у рівні зради буде подвоєно.\nРiвень зради росте до '+current_zrada_level+'.\nРiвень перемоги впав.\nДякую за увагу'}
@@ -160,7 +159,7 @@ async def bot():
                                     await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
 
                             elif zrada_event == True:
-                                    current_zrada_level = int(current_zrada_level)+zrada_change*3
+                                    current_zrada_level = int(current_zrada_level)+(zrada_change*2)
                                     current_zrada_level = str(current_zrada_level)
                                     cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
                                     message = {'chat_id':chat_id, 'user_id':user_id,'text':'Триває тиждень зради.Рiвень зради росте до '+current_zrada_level+'.\nРiвень перемоги впав.'}
@@ -179,8 +178,7 @@ async def bot():
                                 if event_start_chance <=20:
                                     event_start = datetime.datetime.now()
                                     peremoga_event = True
-                                    peremoga_change = peremoga_change*3
-                                    current_zrada_level = int(current_zrada_level)-peremoga_change
+                                    current_zrada_level = int(current_zrada_level)-(peremoga_change*2)
                                     current_zrada_level = str(current_zrada_level)
                                     cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
                                     message = {'chat_id':chat_id, 'user_id':user_id,'text':'Астрологи оголосили тиждень перемоги.\nУсі зміни у рівні перемоги буде подвоєно.\nРiвень зради падає до '+current_zrada_level+'.\nРiвень перемоги виріс.\nДякую за увагу'}
@@ -194,8 +192,7 @@ async def bot():
                                     await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
                                     
                             elif peremoga_event == True:
-                                    peremoga_change = peremoga_change*3
-                                    current_zrada_level = int(current_zrada_level)-peremoga_change
+                                    current_zrada_level = int(current_zrada_level)-(peremoga_change*2)
                                     current_zrada_level = str(current_zrada_level)
                                     cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
                                     message = {'chat_id':chat_id, 'user_id':user_id,'text':'Триває тиждень перемоги.\nРівень зради падає до '+current_zrada_level+'.\nРiвень перемоги виріс.'}
