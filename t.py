@@ -68,9 +68,13 @@ async def bot():
                             if int(current_zrada_level) > 250:
                                 message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради: '+str(current_zrada_level)+'\nТотальна зрада.'}
                                 await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                            
+                            elif current_zrada_level > 175:
+                                message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради: '+str(current_zrada_level)+'\nКосмічний.'}
+                                await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
 
                             elif current_zrada_level > 125:
-                                message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради: '+str(current_zrada_level)+'\nС.'}
+                                message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради: '+str(current_zrada_level)+'\nСуборбітальний.'}
                                 await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
 
                             elif current_zrada_level > 50:
