@@ -287,4 +287,4 @@ if __name__=='__main__':
      while True:
         asyncio.set_event_loop(loop)
         loop.run_until_complete(bot())
-        time.sleep(5)
+        time.sleep(1)
