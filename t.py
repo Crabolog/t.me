@@ -37,7 +37,7 @@ async def bot():
             peremoga_event = False
         elif event_days <=1:
             pass
-        time.sleep(0.8)
+        time.sleep(0.7)
         zrada_change = random.randint(1,45)
         peremoga_change = random.randint(1,25)
         event_start_chance = random.randint(0,100)
@@ -50,7 +50,7 @@ async def bot():
                     offset = data['result'][-1]['update_id']
 
                     if update_id == update:
-                        time.sleep(1.1)
+                        time.sleep(1)
                         pass
 
                     elif update_id != update:
