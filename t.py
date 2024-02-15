@@ -264,7 +264,7 @@ async def bot():
 
 
                                 else:
-                                    message = {'chat_id':chat_id, 'user_id':my_id,'text':'Nothing was catched'}
+                                    message = {'chat_id':my_id, 'user_id':my_id,'text':'Nothing was catched'}
                                     await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
                                     pass
                     
