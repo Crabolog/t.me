@@ -60,7 +60,7 @@ async def bot():
                         chat_id = data['result'][-1]['message']['chat']['id']
                         username = data['result'][-1]['message']['from']['username']
                         message_id = data['result'][-1]['message']['message_id']
-                        text = data['result'][-1]['message']['text']
+                        text = data['result'][-1]['message']['text'].lower()
 
                 #status check    
                         if text in status:
@@ -207,6 +207,15 @@ async def bot():
                             else:
                                 message = {'chat_id':chat_id, 'user_id':user_id,'text':'Перевiр мій код, строка 195'}
                                 await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+
+                        elif text in btc_price:
+                                async with session.get('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT',timeout=5) as resp:
+                                    data =  await resp.json()
+                                    symbol = data['symbol']
+                                    price = float(data['price'])
+                                    price = "{:.2f}".format(price)
+                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':str(symbol)+': '+str(price)}
+                                    await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
 
                             
                 #word by word check
