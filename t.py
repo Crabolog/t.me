@@ -264,15 +264,15 @@ async def bot():
 
 
                                 else:
-                                    # message = {'chat_id':chat_id, 'user_id':user_id,'text':text}
-                                    # await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Nothing was catched'}
+                                    await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
                                     pass
                     
         except Exception as e:
              async with aiohttp.ClientSession() as session:
                 chat_id = my_id
                 user_id =  my_id
-                async with session.get(tel_api+tel_token+'/getUpdates?offset='+f"{offset}",timeout=5) as resp:
+                async with session.get(tel_api+tel_token+'/getUpdates',timeout=5) as resp:
                     data =  await resp.json()
                     message = {'chat_id':chat_id, 'user_id':user_id,'text':str(e)}
                     await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
