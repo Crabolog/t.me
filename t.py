@@ -60,8 +60,10 @@ async def bot():
                         chat_id = data['result'][-1]['message']['chat']['id']
                         username = data['result'][-1]['message']['from']['username']
                         message_id = data['result'][-1]['message']['message_id']
-                        text = data['result'][-1]['message']['text'].lower()
-
+                        text = data['result'][-1]['message']['text']
+                        text = text.lower()
+                    
+                        
                 #status check    
                         if text in status:
                             current_zrada_level = int(current_zrada_level)
@@ -112,6 +114,17 @@ async def bot():
                         elif text in putin:
                             message = {'chat_id':chat_id, 'user_id':user_id,'text':random.choice(pu_list)}
                             await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+
+                #btc_price
+                        
+                        elif text in btc_price:
+                                async with session.get('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT',timeout=5) as resp:
+                                    data =  await resp.json()
+                                    symbol = data['symbol']
+                                    price = float(data['price'])
+                                    price = "{:.2f}".format(price)
+                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':str(symbol)+': '+str(price)}
+                                    await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
 
                 #zrada or peremoga random
                         elif re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", text) in zrada_or_peremoga:
@@ -208,15 +221,6 @@ async def bot():
                                 message = {'chat_id':chat_id, 'user_id':user_id,'text':'Перевiр мій код, строка 195'}
                                 await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
 
-                        elif text in btc_price:
-                                async with session.get('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT',timeout=5) as resp:
-                                    data =  await resp.json()
-                                    symbol = data['symbol']
-                                    price = float(data['price'])
-                                    price = "{:.2f}".format(price)
-                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':str(symbol)+': '+str(price)}
-                                    await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
-
                             
                 #word by word check
                         elif text not in zrada and text not in peremoga and text not in zrada_or_peremoga:
@@ -260,6 +264,8 @@ async def bot():
 
 
                                 else:
+                                    # message = {'chat_id':chat_id, 'user_id':user_id,'text':text}
+                                    # await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
                                     pass
                     
         except Exception as e:

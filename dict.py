@@ -9,7 +9,7 @@ zrada_mention = ['зрады',
                  'зрадой',
                  'зради',
                  'зраде',
-                 'зрада,'
+                 'зрада',
                  'зраді']
 
 peremoga_mention = ['перемогой',
@@ -40,7 +40,7 @@ peremoga_mention_replies = ['i де та перемога?',
                             'Дiставайте Порошенка',
                             'Вiрю, я повiрив']
 
-btc_price = ['/btc_price@ZradaLevelsBot','/btc_price']
+btc_price = ['/btc_price@zradalevelsbot','/btc_price']
 
 random_words = ['окей',
                 'лол',
@@ -72,7 +72,7 @@ random_words = ['окей',
                   '0/',
                   'нахуй',
                   'хуй',
-                  'Сука',
+                  'cука',
                   'зеленский',
                   'майдан',
                   'порошенко',
@@ -164,13 +164,13 @@ random_replies = ['Покупай лучше биток пока не поздн
                   ]
 #commands
 status = ['/status', 
-          '/status@ZradaLevelsBot',
+          '/status@zradalevelsbot',
           'шо по зраде',
           'шо по зраді']
 
-zelensky = ('/ze_bingo','/ze_bingo@ZradaLevelsBot')
-mc_chicken = ['/mc_chicken', '/mc_chicken@ZradaLevelsBot']
-putin = ['/pu_bingo', '/pu_bingo@ZradaLevelsBot' ]
+zelensky = ('/ze_bingo','/ze_bingo@zradalevelsbot')
+mc_chicken = ['/mc_chicken', '/mc_chicken@zradalevelsbot']
+putin = ['/pu_bingo', '/pu_bingo@zradalevelsbot' ]
 
 
 zrada_or_peremoga = ['так шо зрада чи перемога',
@@ -223,7 +223,6 @@ bmw = ['беха',
        'бехой',
        'сивик',
        'хонда',
-       'Хонда',
        'форд'
         'хонде',
         'хонды',
