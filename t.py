@@ -46,9 +46,10 @@ async def bot():
                 async with aiohttp.ClientSession() as session:
                     chat_id = my_id
                     user_id =  my_id
+                    e = str(e)
                     async with session.get(tel_api+tel_token+'/getUpdates',timeout=5) as resp:
                         data =  await resp.json()
-                        message = {'chat_id':chat_id, 'user_id':user_id,'text':str(e)}
+                        message = {'chat_id':chat_id, 'user_id':user_id,'text':'Перший '+e}
                         await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
             event_days = event_end-int(event_start)
             if event_days >1:
@@ -297,8 +298,9 @@ async def bot():
                 async with aiohttp.ClientSession() as session:
                     chat_id = my_id
                     user_id = my_id
+                    e = str(e)
                     if e:
-                        message = {'chat_id':chat_id, 'user_id':user_id,'text':str(e)}
+                        message = {'chat_id':chat_id, 'user_id':user_id,'text':'Другий ' +e}
                         await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
                     else:
                         message = {'chat_id':chat_id, 'user_id':user_id,'text':'123'}
