@@ -296,12 +296,13 @@ async def bot():
             except Exception as e:
                 async with aiohttp.ClientSession() as session:
                     chat_id = my_id
-                    user_id =  my_id
-                    async with session.get(tel_api+tel_token+'/getUpdates',timeout=5) as resp:
-                        data =  await resp.json()
+                    user_id = my_id
+                    if e:
                         message = {'chat_id':chat_id, 'user_id':user_id,'text':str(e)}
                         await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
-                    pass
+                    else:
+                        message = {'chat_id':chat_id, 'user_id':user_id,'text':'123'}
+                        await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
         except:
             pass
         
