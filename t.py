@@ -16,15 +16,11 @@ async def bot():
     update = None
     offset = 1
   
-   
-
     # event_start = datetime.datetime.now() #datetime.datetime.strptime('2024-02-12 19:43:55.985354', '%Y-%m-%d %H:%M:%S.%f')
     # event_start = int(event_start.strftime('%Y%m%d'))
     # event_end = datetime.datetime.now()
     # event_end = int(event_end.strftime('%Y%m%d'))
     # event_days = event_end-event_start
-    # zrada_event = False
-    # peremoga_event = False
 
     while True:
         try:
@@ -53,9 +49,9 @@ async def bot():
                         data =  await resp.json()
                         message = {'chat_id':my_id, 'user_id':my_id,'text':'Перший '+str(e)}
                         await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
-                        event_days = 2
+                        event_days = 3
 
-            if event_days >1:
+            if event_days >2:
                 event_start = datetime.datetime.now()
                 event_start = event_start.strftime('%Y%m%d')
                 zrada_event = False
@@ -64,7 +60,7 @@ async def bot():
                 cursor.execute("UPDATE event_state SET value = false where name = 'zrada_event' ")
                 cursor.execute("UPDATE event_state SET value = false where name = 'peremoga_event' ")
                 pass
-
+            print(event_days)
             try:
                 async with aiohttp.ClientSession() as session:
                     async with session.get(tel_api+tel_token+'/getUpdates?offset='+f"{offset}",timeout=5) as resp:
@@ -299,8 +295,6 @@ async def bot():
         except:
             pass
         
-
-
 if __name__=='__main__':
      while True:
         asyncio.set_event_loop(loop)
