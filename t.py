@@ -28,7 +28,11 @@ async def bot():
 
     while True:
         try:
+            zrada_change = random.randint(1,45)
+            peremoga_change = random.randint(1,25)
+            event_start_chance = random.randint(0,100)
             time.sleep(0.7)
+
             try:
                 cursor = conn.cursor()
                 cursor.execute("SELECT * FROM zrada_level WHERE id = 1")
@@ -37,21 +41,20 @@ async def bot():
                 zrada_event = cursor.fetchone()[0]
                 cursor.execute("SELECT value FROM event_state where id = 2 ")
                 peremoga_event = cursor.fetchone()[0]
-
                 event_end = datetime.datetime.now()
                 event_end = int(event_end.strftime('%Y%m%d'))
                 cursor.execute("SELECT value from event_date WHERE name = 'start_date'")
                 event_start = cursor.fetchone()[0]
+                event_days = event_end-int(event_start)
+
             except Exception as e:
                 async with aiohttp.ClientSession() as session:
-                    chat_id = my_id
-                    user_id =  my_id
-                    e = str(e)
                     async with session.get(tel_api+tel_token+'/getUpdates',timeout=5) as resp:
                         data =  await resp.json()
-                        message = {'chat_id':chat_id, 'user_id':user_id,'text':'Перший '+e}
+                        message = {'chat_id':my_id, 'user_id':my_id,'text':'Перший '+str(e)}
                         await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
-            event_days = event_end-int(event_start)
+                        event_days = 2
+
             if event_days >1:
                 event_start = datetime.datetime.now()
                 event_start = event_start.strftime('%Y%m%d')
@@ -61,11 +64,8 @@ async def bot():
                 cursor.execute("UPDATE event_state SET value = false where name = 'zrada_event' ")
                 cursor.execute("UPDATE event_state SET value = false where name = 'peremoga_event' ")
                 pass
-            zrada_change = random.randint(1,45)
-            peremoga_change = random.randint(1,25)
-            event_start_chance = random.randint(0,100)
+
             try:
-                
                 async with aiohttp.ClientSession() as session:
                     async with session.get(tel_api+tel_token+'/getUpdates?offset='+f"{offset}",timeout=5) as resp:
                         data =  await resp.json()
@@ -167,11 +167,9 @@ async def bot():
                                 
                     #zrada change
                             elif re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", text) in zrada:
-
                                 if zrada_event == False and peremoga_event == False:
                                     print(event_start_chance)
                                     if event_start_chance <=20:
-                                        
                                         event_start = datetime.datetime.now()
                                         event_start = event_start.strftime('%Y%m%d')
                                         cursor.execute("UPDATE event_date SET value = "+event_start+"  WHERE id = 1 ")
@@ -211,7 +209,6 @@ async def bot():
                                 
                     #peremoga change
                             elif re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", text) in peremoga:
-
                                 if zrada_event == False and peremoga_event == False:
                                     if event_start_chance <=20:
                                         event_start = datetime.datetime.now()
@@ -288,22 +285,16 @@ async def bot():
                                             message = {'chat_id':chat_id, 'user_id':user_id,'text':txt}
                                             await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
 
-
-
                             else:
                                 pass
                 conn.commit()
-                
+            except KeyError:
+                pass
             except Exception as e:
                 async with aiohttp.ClientSession() as session:
-                    chat_id = my_id
-                    user_id = my_id
-                    e = str(e)
                     if e:
-                        message = {'chat_id':chat_id, 'user_id':user_id,'text':'Другий ' +e}
-                        await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
-                    else:
-                        message = {'chat_id':chat_id, 'user_id':user_id,'text':'123'}
+                        e = repr(e)
+                        message = {'chat_id':my_id, 'user_id':my_id,'text':'Другий ' +str(e)}
                         await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
         except:
             pass
