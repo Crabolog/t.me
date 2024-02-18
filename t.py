@@ -151,13 +151,13 @@ async def bot():
 
                                 if change_chance <5:
                                     current_zrada_level = int(current_zrada_level)+zrada_change
-                                    cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
+                                    cursor.execute("UPDATE zrada_level set value = "+str(current_zrada_level)+" WHERE id = 1")
                                     message = {'chat_id':chat_id, 'user_id':user_id,'text':'Схоже на зраду.\nРiвень зради росте до '+str(current_zrada_level)+'.\nРiвень перемоги впав.','reply_to_message_id':message_id}
                                     await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
 
                                 elif change_chance >5:
                                     current_zrada_level = int(current_zrada_level)-peremoga_change
-                                    cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
+                                    cursor.execute("UPDATE zrada_level set value = "+str(current_zrada_level)+" WHERE id = 1")
                                     message = {'chat_id':chat_id, 'user_id':user_id,'text':'Схоже на перемогу!\nРiвень зради впав до '+str(current_zrada_level)+'.\nРiвень перемоги вирiс.','reply_to_message_id':message_id}
                                     await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
                                 
