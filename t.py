@@ -27,7 +27,7 @@ async def bot():
             zrada_change = random.randint(1,45)
             peremoga_change = random.randint(1,25)
             event_start_chance = random.randint(0,100)
-            time.sleep(1)
+            time.sleep(1.5)
 
             try:
                 cursor = conn.cursor()
