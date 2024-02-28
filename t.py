@@ -145,9 +145,9 @@ async def bot():
 
                     #zrada or peremoga random
                             elif re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", text) in zrada_or_peremoga:
-                                change_chance = random.randint(1, 11)
+                                change_chance = random.randint(0, 11)
 
-                                if change_chance <5:
+                                if change_chance <=5:
                                     current_zrada_level = int(current_zrada_level)+zrada_change
                                     cursor.execute("UPDATE zrada_level set value = "+str(current_zrada_level)+" WHERE id = 1")
                                     message = {'chat_id':chat_id, 'user_id':user_id,'text':'Схоже на зраду.\nРiвень зради росте до '+str(current_zrada_level)+'.\nРiвень перемоги впав.','reply_to_message_id':message_id}
