@@ -27,15 +27,15 @@ async def bot():
             zrada_change = random.randint(1,45)
             peremoga_change = random.randint(1,25)
             event_start_chance = random.randint(0,100)
-            time.sleep(1.5)
+            time.sleep(1)
 
             try:
                 cursor = conn.cursor()
                 cursor.execute("SELECT * FROM zrada_level WHERE id = 1")
                 current_zrada_level = cursor.fetchone()[2]
-                cursor.execute("SELECT value FROM event_state where id = 1 ")
+                cursor.execute("SELECT value FROM event_state WHERE id = 1 ")
                 zrada_event = cursor.fetchone()[0]
-                cursor.execute("SELECT value FROM event_state where id = 2 ")
+                cursor.execute("SELECT value FROM event_state WHERE id = 2 ")
                 peremoga_event = cursor.fetchone()[0]
                 event_end = datetime.datetime.now()
                 event_end = int(event_end.strftime('%Y%m%d'))
@@ -45,9 +45,7 @@ async def bot():
 
             except Exception as e:
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(tel_api+tel_token+'/getUpdates',timeout=5) as resp:
-                        data =  await resp.json()
-                        message = {'chat_id':my_id, 'user_id':my_id,'text':'Перший '+str(e)}
+                        message = {'chat_id':my_id, 'user_id':my_id,'text':str(e)}
                         await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
                         event_days = 3
 
@@ -57,10 +55,10 @@ async def bot():
                 zrada_event = False
                 peremoga_event = False
                 cursor.execute("UPDATE event_date set value = "+event_start+" WHERE id = 1")
-                cursor.execute("UPDATE event_state SET value = false where name = 'zrada_event' ")
-                cursor.execute("UPDATE event_state SET value = false where name = 'peremoga_event' ")
+                cursor.execute("UPDATE event_state SET value = false WHERE name = 'zrada_event' ")
+                cursor.execute("UPDATE event_state SET value = false WHERE name = 'peremoga_event' ")
                 pass
-            print(event_days)
+        
             try:
                 async with aiohttp.ClientSession() as session:
                     async with session.get(tel_api+tel_token+'/getUpdates?offset='+f"{offset}",timeout=5) as resp:
@@ -270,7 +268,7 @@ async def bot():
                                         txt = random.choice(mamka_response)
                                         message = {'chat_id':chat_id, 'user_id':user_id,'text':txt,'reply_to_message_id':message_id}
                                         await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
-
+                    #random replies
                                     # elif word in random_words:
                                     #     if event_start_chance <=50:
                                     #         txt = random.choice(random_replies)
@@ -290,7 +288,7 @@ async def bot():
                 async with aiohttp.ClientSession() as session:
                     if e:
                         e = repr(e)
-                        message = {'chat_id':my_id, 'user_id':my_id,'text':'Другий ' +str(e)}
+                        message = {'chat_id':my_id, 'user_id':my_id,'text':str(e)}
                         await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
         except:
             pass
