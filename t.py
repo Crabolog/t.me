@@ -269,15 +269,15 @@ async def bot():
                                         message = {'chat_id':chat_id, 'user_id':user_id,'text':txt,'reply_to_message_id':message_id}
                                         await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
                     #random replies
-                                    # elif word in random_words:
-                                    #     if event_start_chance <=50:
-                                    #         txt = random.choice(random_replies)
-                                    #         message = {'chat_id':chat_id, 'user_id':user_id,'text':txt,'reply_to_message_id':message_id}
-                                    #         await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
-                                    #     elif event_start_chance >50:
-                                    #         txt = random.choice(random_replies)
-                                    #         message = {'chat_id':chat_id, 'user_id':user_id,'text':txt}
-                                    #         await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                                    elif word in random_words:
+                                        if event_start_chance <=50:
+                                            txt = random.choice(random_replies)
+                                            message = {'chat_id':chat_id, 'user_id':user_id,'text':txt,'reply_to_message_id':message_id}
+                                            await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                                        elif event_start_chance >50:
+                                            txt = random.choice(random_replies)
+                                            message = {'chat_id':chat_id, 'user_id':user_id,'text':txt}
+                                            await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
 
                             else:
                                 pass
