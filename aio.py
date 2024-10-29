@@ -87,7 +87,7 @@ def fetch_keywords_and_responses():
 
 
 #zrada levels
-@dp.message(F.text.in_({'📊 Level', 'level', '/level'}))
+@dp.message(F.text.in_({'📊 Level', 'level', '/level', '/level@ZradaLevelsBot', 'level@ZradaLevelsBot'}))
 async def help_command(message: Message):
     try:
         cursor = conn.cursor()
@@ -141,7 +141,7 @@ async def help_command(message: Message):
     await message.answer(text='Рівень зради: ' + str(current_zrada_level)+'\n'+level, reply_markup=keyboard)
 
 #bitcoin
-@dp.message(F.text.in_({'📈 BTC', 'btc', '/btc'}))
+@dp.message(F.text.in_({'📈 BTC', 'btc', '/btc', '/btc@ZradaLevelsBot', 'btc@ZradaLevelsBot'}))
 async def btc_command(message: Message):
     try:
         async with aiohttp.ClientSession() as session:
@@ -156,7 +156,7 @@ async def btc_command(message: Message):
 
 
 #bingo
-@dp.message(F.text.in_({'🎲 Bingo', 'bingo', '/bingo'}))
+@dp.message(F.text.in_({'🎲 Bingo', 'bingo', '/bingo', '/bingo@ZradaLevelsBot', 'bingo@ZradaLevelsBot'}))
 async def bingo_command(message: Message):
     bmw, mamka, mamka_response, bingo, random_keyword, random_response = fetch_keywords_and_responses()
 
@@ -168,7 +168,7 @@ async def bingo_command(message: Message):
 
 
 #roll
-@dp.message(F.text.in_({'🎲 Roll', 'roll', '/roll'}))
+@dp.message(F.text.in_({'🎲 Roll', 'roll', '/roll', '/roll@ZradaLevelsBot', 'roll@ZradaLevelsBot'}))
 async def bingo_command(message: Message):
     try:
         text = random.randint(0,100)
@@ -177,7 +177,7 @@ async def bingo_command(message: Message):
     await message.answer(text=f"{html.bold(message.from_user.full_name)} зролив {text}", reply_markup=keyboard)
 
 #@dp.message(F.text.in_({'', '', ''}))
-@dp.message(F.text.in_({'⚔️ Zrada', 'zrada', '/zrada'}))
+@dp.message(F.text.in_({'⚔️ Zrada', 'zrada', '/zrada', 'zrada@ZradaLevelsBot', '/zrada@ZradaLevelsBot'}))
 async def zrada_command(message: Message):
     try:
         zrada_change = random.randint(1,45)
@@ -241,7 +241,7 @@ async def zrada_command(message: Message):
         await message.answer(text = 'Триває тиждень зради.Рiвень зради росте до '+current_zrada_level+'.\nРiвень перемоги впав.')
     conn.commit()
 
-@dp.message(F.text.in_({'🏆 Peremoga', 'peremoga', '/peremoga'}))
+@dp.message(F.text.in_({'🏆 Peremoga', 'peremoga', '/peremoga', 'peremoga@ZradaLevelsBot', '/peremoga@ZradaLevelsBot'}))
 async def peremoga_command(message: Message):
     try:
         zrada_change = random.randint(1,45)
