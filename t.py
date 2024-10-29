@@ -96,6 +96,11 @@ async def bot():
                                     message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради: '+str(current_zrada_level)+'\nСуборбітальний.'}
                                     await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
 
+                                elif current_zrada_level > 99:
+                                    message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради: '+str(current_zrada_level)+'\n Дуже високий рiвень.'}
+                                    await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
+                                
+
                                 elif current_zrada_level > 50:
                                     message = {'chat_id':chat_id, 'user_id':user_id,'text':'Рiвень зради: '+str(current_zrada_level)+'\nВисокий рiвень.'}
                                     await session.post(tel_api+tel_token+'/sendMessage',data=message,timeout=5)
