@@ -77,7 +77,7 @@ def fetch_keywords_and_responses():
 
     cursor.execute("SELECT response FROM responses WHERE category = 'politics' ")
     random_response = [row[0] for row in cursor.fetchall()]
-    cursor.close()
+    
    
 
     return bmw, mamka, mamka_response, bingo, random_keyword, random_response
@@ -197,7 +197,7 @@ async def zrada_command(message: Message):
             event_start = cursor.fetchone()[0]
             event_days = event_end-int(event_start)
         except Exception as e:
-            await message.answer(text = 'error')
+            await message.answer(text = 'error '+ e)
         if event_days >2:
             event_start = datetime.datetime.now()
             event_start = event_start.strftime('%Y%m%d')
@@ -207,8 +207,8 @@ async def zrada_command(message: Message):
             cursor.execute("UPDATE event_state SET value = false WHERE name = 'zrada_event' ")
             cursor.execute("UPDATE event_state SET value = false WHERE name = 'peremoga_event' ")
             pass
-    except:
-        await message.answer(text = 'error')
+    except Exception as e:
+        await message.answer(text = 'error 2 '+e)
        
     if zrada_event == False and peremoga_event == False:
         if event_start_chance <=20:
@@ -261,7 +261,7 @@ async def peremoga_command(message: Message):
             event_start = cursor.fetchone()[0]
             event_days = event_end-int(event_start)
         except Exception as e:
-            await message.answer(text = 'error')
+            await message.answer(text = 'error 3' +e)
         if event_days >2:
             event_start = datetime.datetime.now()
             event_start = event_start.strftime('%Y%m%d')
@@ -271,8 +271,8 @@ async def peremoga_command(message: Message):
             cursor.execute("UPDATE event_state SET value = false WHERE name = 'zrada_event' ")
             cursor.execute("UPDATE event_state SET value = false WHERE name = 'peremoga_event' ")
             pass
-    except:
-        await message.answer(text = 'Спробуй ще')
+    except Exception as e:
+        await message.answer(text = 'Спробуй ще' + e)
 
     if zrada_event == False and peremoga_event == False:
         if event_start_chance <=20:
@@ -343,7 +343,7 @@ async def random_message(message: Message):
                 event_days = event_end-int(event_start)
 
             except Exception as e:
-                await message.answer(text = 'error')
+                await message.answer(text = 'error in F.text '+ e)
 
             if event_days >2:
                 event_start = datetime.datetime.now()
@@ -356,7 +356,7 @@ async def random_message(message: Message):
                 pass
 
         except:
-            await message.answer(text = 'error')
+            await message.answer(text = 'error 1 in F.text ' +e)
            
         if zrada_event == False and peremoga_event == False:
             if event_start_chance <=20:
@@ -414,7 +414,7 @@ async def random_message(message: Message):
                 event_days = event_end-int(event_start)
 
             except Exception as e:
-                await message.answer(text = 'error')
+                await message.answer(text = 'error in peremoga '+e)
 
             if event_days >2:
                 event_start = datetime.datetime.now()
@@ -425,8 +425,8 @@ async def random_message(message: Message):
                 cursor.execute("UPDATE event_state SET value = false WHERE name = 'zrada_event' ")
                 cursor.execute("UPDATE event_state SET value = false WHERE name = 'peremoga_event' ")
                 pass
-        except:
-            await message.answer(text = 'Спробуй ще')
+        except Exception as e:
+            await message.answer(text = 'Спробуй ще '+e)
 
         if zrada_event == False and peremoga_event == False:
             if event_start_chance <=20:
