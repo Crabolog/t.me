@@ -59,6 +59,8 @@ dp = Dispatcher()
 #     await message.answer(f"Hello, {html.bold(message.from_user.full_name)}!")
 
 def fetch_keywords_and_responses():
+    if conn.closed:
+        conn = connection
     cursor = conn.cursor()
     cursor.execute("SELECT keyword FROM keywords WHERE category = 'bmw'")
     bmw = [row[0] for row in cursor.fetchall()]
@@ -91,7 +93,9 @@ def fetch_keywords_and_responses():
 #zrada levels
 @dp.message(F.text.in_({'📊 Level', 'level', '/level', '/level@ZradaLevelsBot', 'level@ZradaLevelsBot'}))
 async def help_command(message: Message):
-    cursor = conn.cursor()
+    if conn.closed:
+        conn = connection
+        cursor = conn.cursor()
     try:
         cursor.execute("SELECT * FROM zrada_level WHERE id = 1")
         current_zrada_level = cursor.fetchone()[2]
@@ -182,7 +186,9 @@ async def bingo_command(message: Message):
 #@dp.message(F.text.in_({'', '', ''}))
 @dp.message(F.text.in_({'⚔️ Zrada', 'zrada', '/zrada', 'zrada@ZradaLevelsBot', '/zrada@ZradaLevelsBot'}))
 async def zrada_command(message: Message):
-    cursor = conn.cursor()
+    if conn.closed:
+        conn = connection
+        cursor = conn.cursor()
     try:
         zrada_change = random.randint(1,45)
         peremoga_change = random.randint(1,25)
@@ -252,7 +258,9 @@ async def zrada_command(message: Message):
 
 @dp.message(F.text.in_({'🏆 Peremoga', 'peremoga', '/peremoga', 'peremoga@ZradaLevelsBot', '/peremoga@ZradaLevelsBot'}))
 async def peremoga_command(message: Message):
-    cursor = conn.cursor()
+    if conn.closed:
+        conn = connection
+        cursor = conn.cursor()
     try:
         zrada_change = random.randint(1,45)
         peremoga_change = random.randint(1,25)
@@ -324,7 +332,9 @@ async def peremoga_command(message: Message):
 
 @dp.message(F.text)
 async def random_message(message: Message):
-    cursor = conn.cursor()
+    if conn.closed:
+        conn = connection
+        cursor = conn.cursor()
     cleaned_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", message.text.lower())
     bmw, mamka, mamka_response, bingo, random_keyword, random_response = fetch_keywords_and_responses()
 
@@ -473,7 +483,7 @@ async def random_message(message: Message):
     
     elif any(keyword in cleaned_text for keyword in random_keyword):
         await message.answer(random.choice(random_response))
-        
+
     conn.commit()
     conn.close()
         
