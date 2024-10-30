@@ -45,6 +45,7 @@ logging.basicConfig(level=logging.INFO)
 # All handlers should be attached to the Router (or Dispatcher)
 
 dp = Dispatcher()
+cursor = conn.cursor()
 
 # @dp.message(CommandStart())
 # async def command_start_handler(message: Message) -> None:
@@ -59,7 +60,7 @@ dp = Dispatcher()
 #     await message.answer(f"Hello, {html.bold(message.from_user.full_name)}!")
 
 def fetch_keywords_and_responses():
-    if conn.closed:
+    if connection.closed:
         conn = connection
     cursor = conn.cursor()
     cursor.execute("SELECT keyword FROM keywords WHERE category = 'bmw'")
@@ -93,7 +94,7 @@ def fetch_keywords_and_responses():
 #zrada levels
 @dp.message(F.text.in_({'📊 Level', 'level', '/level', '/level@ZradaLevelsBot', 'level@ZradaLevelsBot'}))
 async def help_command(message: Message):
-    if conn.closed:
+    if connection.closed:
         conn = connection
         cursor = conn.cursor()
     try:
@@ -186,7 +187,7 @@ async def bingo_command(message: Message):
 #@dp.message(F.text.in_({'', '', ''}))
 @dp.message(F.text.in_({'⚔️ Zrada', 'zrada', '/zrada', 'zrada@ZradaLevelsBot', '/zrada@ZradaLevelsBot'}))
 async def zrada_command(message: Message):
-    if conn.closed:
+    if connection.closed:
         conn = connection
         cursor = conn.cursor()
     try:
@@ -258,7 +259,7 @@ async def zrada_command(message: Message):
 
 @dp.message(F.text.in_({'🏆 Peremoga', 'peremoga', '/peremoga', 'peremoga@ZradaLevelsBot', '/peremoga@ZradaLevelsBot'}))
 async def peremoga_command(message: Message):
-    if conn.closed:
+    if connection.closed:
         conn = connection
         cursor = conn.cursor()
     try:
@@ -332,7 +333,7 @@ async def peremoga_command(message: Message):
 
 @dp.message(F.text)
 async def random_message(message: Message):
-    if conn.closed:
+    if connection.closed:
         conn = connection
         cursor = conn.cursor()
     cleaned_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", message.text.lower())
