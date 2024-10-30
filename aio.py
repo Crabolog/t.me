@@ -4,6 +4,7 @@ import logging
 import re
 import sys
 from os import getenv
+from settings import conn
 from settings import *
 from dict import *
 import datetime
