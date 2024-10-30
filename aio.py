@@ -60,8 +60,8 @@ cursor = conn.cursor()
 #     await message.answer(f"Hello, {html.bold(message.from_user.full_name)}!")
 
 def fetch_keywords_and_responses():
-    if connection.closed:
-        conn = connection
+    if conn.closed:
+        conn = conn
     cursor = conn.cursor()
     cursor.execute("SELECT keyword FROM keywords WHERE category = 'bmw'")
     bmw = [row[0] for row in cursor.fetchall()]
@@ -94,8 +94,8 @@ def fetch_keywords_and_responses():
 #zrada levels
 @dp.message(F.text.in_({'📊 Level', 'level', '/level', '/level@ZradaLevelsBot', 'level@ZradaLevelsBot'}))
 async def help_command(message: Message):
-    if connection.closed:
-        conn = connection
+    if conn.closed:
+        conn = conn
         cursor = conn.cursor()
     try:
         cursor.execute("SELECT * FROM zrada_level WHERE id = 1")
@@ -187,8 +187,8 @@ async def bingo_command(message: Message):
 #@dp.message(F.text.in_({'', '', ''}))
 @dp.message(F.text.in_({'⚔️ Zrada', 'zrada', '/zrada', 'zrada@ZradaLevelsBot', '/zrada@ZradaLevelsBot'}))
 async def zrada_command(message: Message):
-    if connection.closed:
-        conn = connection
+    if conn.closed:
+        conn = conn
         cursor = conn.cursor()
     try:
         zrada_change = random.randint(1,45)
@@ -259,8 +259,8 @@ async def zrada_command(message: Message):
 
 @dp.message(F.text.in_({'🏆 Peremoga', 'peremoga', '/peremoga', 'peremoga@ZradaLevelsBot', '/peremoga@ZradaLevelsBot'}))
 async def peremoga_command(message: Message):
-    if connection.closed:
-        conn = connection
+    if conn.closed:
+        conn = conn
         cursor = conn.cursor()
     try:
         zrada_change = random.randint(1,45)
@@ -333,8 +333,8 @@ async def peremoga_command(message: Message):
 
 @dp.message(F.text)
 async def random_message(message: Message):
-    if connection.closed:
-        conn = connection
+    if conn.closed:
+        conn = conn
         cursor = conn.cursor()
     cleaned_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", message.text.lower())
     bmw, mamka, mamka_response, bingo, random_keyword, random_response = fetch_keywords_and_responses()
