@@ -77,6 +77,7 @@ def fetch_keywords_and_responses():
 
     cursor.execute("SELECT response FROM responses WHERE category = 'politics' ")
     random_response = [row[0] for row in cursor.fetchall()]
+    conn.commit()
     
    
 
@@ -112,11 +113,13 @@ async def help_command(message: Message):
             level = 'Помiрний.'
         else:
             level = ''
+        conn.commit()
     except:
         time.sleep(1.5)
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM zrada_level WHERE id = 1")
         current_zrada_level = cursor.fetchone()[2]
+        conn.commit()
 
         if int(current_zrada_level) > 250:
             level = 'Тотальна зрада.'
@@ -196,6 +199,7 @@ async def zrada_command(message: Message):
             cursor.execute("SELECT value from event_date WHERE name = 'start_date'")
             event_start = cursor.fetchone()[0]
             event_days = event_end-int(event_start)
+            conn.commit()
         except Exception as e:
             await message.answer(text = 'error '+ e)
         if event_days >2:
@@ -206,7 +210,8 @@ async def zrada_command(message: Message):
             cursor.execute("UPDATE event_date set value = "+event_start+" WHERE id = 1")
             cursor.execute("UPDATE event_state SET value = false WHERE name = 'zrada_event' ")
             cursor.execute("UPDATE event_state SET value = false WHERE name = 'peremoga_event' ")
-            pass
+            conn.commit()
+            
     except Exception as e:
         await message.answer(text = 'error 2 '+e)
        
@@ -220,6 +225,7 @@ async def zrada_command(message: Message):
             current_zrada_level = str(current_zrada_level)
             cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
             cursor.execute("SELECT * FROM zrada_level WHERE id = 1")
+            conn.commit()
             current_zrada_level = cursor.fetchone()[2]
             await message.answer(text = 'Астрологи оголосили тиждень зради.\nУсі зміни у рівні зради буде подвоєно.\nРiвень зради росте до '+str(current_zrada_level)+'.\nРiвень перемоги впав.\nДякую за увагу')
         elif event_start_chance >20:
@@ -227,17 +233,20 @@ async def zrada_command(message: Message):
             current_zrada_level = str(current_zrada_level)
             cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
             cursor.execute("SELECT * FROM zrada_level WHERE id = 1")
+            conn.commit()
             current_zrada_level = cursor.fetchone()[2]
             await message.answer(text = 'Рiвень зради росте до '+str(current_zrada_level)+'.\nРiвень перемоги впав.')
     elif peremoga_event == True:
         current_zrada_level = int(current_zrada_level)+zrada_change
         current_zrada_level = str(current_zrada_level)
         cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
+        conn.commit()
         await message.answer(text = 'Триває тиждень перемоги.\nАле рiвень зради все одно росте до '+current_zrada_level+'.\nРiвень перемоги впав.')
     elif zrada_event == True:
         current_zrada_level = int(current_zrada_level)+(zrada_change*2)
         current_zrada_level = str(current_zrada_level)
         cursor.execute("UPDATE zrada_level set value = "+current_zrada_level+" WHERE id = 1")
+        conn.commit()
         await message.answer(text = 'Триває тиждень зради.Рiвень зради росте до '+current_zrada_level+'.\nРiвень перемоги впав.')
     conn.commit()
 
