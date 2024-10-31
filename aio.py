@@ -11,17 +11,16 @@ import datetime
 import time
 import psycopg
 import random
-
-from aiogram import Bot, Dispatcher, html, F
+import openai
+from openai import OpenAI
+from aiogram import Bot, Dispatcher, html, F, types
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 from aiogram.filters import Command
 from aiogram.types import Message
-
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
-# Создание кнопок
 # button_btc = KeyboardButton(text="📈 BTC")
 # button_zrada = KeyboardButton(text="⚔️ Zrada")
 # button_peremoga = KeyboardButton(text="🏆 Peremoga")
@@ -42,15 +41,18 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 zrada = ['зрада','zrada']
 peremoga = ['перемога','peremoga','перемога!']
 
-# Bot token can be obtained via https://t.me/BotFather
 TOKEN = tel_token
 logging.basicConfig(level=logging.INFO)
 # All handlers should be attached to the Router (or Dispatcher)
 
 dp = Dispatcher()
-
 conn.autocommit = True
 cursor = conn.cursor()
+
+client = OpenAI(
+    # This is the default and can be omitted
+    api_key=OPENAI_API_KEY
+)
 
 # @dp.message(CommandStart())
 # async def command_start_handler(message: Message) -> None:
@@ -63,6 +65,7 @@ cursor = conn.cursor()
 #     # method automatically or call API method directly via
 #     # Bot instance: `bot.send_message(chat_id=message.chat.id, ...)`
 #     await message.answer(f"Hello, {html.bold(message.from_user.full_name)}!")
+
 async def fetch_all_keywords_and_responses(conn):
     try:
         rows = await conn.fetch("SELECT keyword, category FROM keywords UNION ALL SELECT response, category FROM responses")
@@ -96,14 +99,10 @@ async def fetch_all_keywords_and_responses(conn):
 #zrada levels
 @dp.message(F.text.in_({'📊 Level', 'level', '/level', '/level@ZradaLevelsBot', 'level@ZradaLevelsBot'}))
 async def help_command(message: Message):
-    conn = await get_connection()  # Вызовите и ожидайте соединение
-    
+    conn = await get_connection() 
     async with conn.transaction():
         try:
-            # Запрашиваем текущее значение уровня зрады
             current_zrada_level = await conn.fetchval("SELECT value FROM zrada_level WHERE id = 1")
-            
-            # Определяем уровень в зависимости от текущего значения
             if int(current_zrada_level) > 250:
                 level = 'Тотальна зрада.'
             elif int(current_zrada_level) > 175:
@@ -122,11 +121,9 @@ async def help_command(message: Message):
                 level = 'Помiрний.'
             else:
                 level = ''
-
         except Exception as e:
             await message.answer(text='Виникла помилка: ' + str(e))
             return
-
     await message.answer(text='Рівень зради: ' + str(current_zrada_level) + '\n' + level)
 
 
@@ -149,15 +146,11 @@ async def btc_command(message: Message):
 @dp.message(F.text.in_({'🎲 Bingo', 'bingo', '/bingo', '/bingo@ZradaLevelsBot', 'bingo@ZradaLevelsBot'}))
 async def bingo_command(message: Message):
     conn = await get_connection()
-    
-    # Предполагается, что fetch_all_keywords_and_responses возвращает асинхронные значения
     bmw, mamka, mamka_response, bingo, random_keyword, random_response = await fetch_all_keywords_and_responses(conn)
-
     try:
         text = random.choice(bingo)
     except IndexError:
         text = 'Спробуй ще разок'
-    
     await message.answer(text=text)
  # , reply_markup=keyboard
 
@@ -174,14 +167,13 @@ async def bingo_command(message: Message):
 #@dp.message(F.text.in_({'', '', ''}))
 @dp.message(F.text.in_({'⚔️ Zrada', 'zrada', '/zrada', 'zrada@ZradaLevelsBot', '/zrada@ZradaLevelsBot'}))
 async def zrada_command(message: Message):
-    conn = await get_connection()  # Вызовите и ожидайте соединение
+    conn = await get_connection()  
     async with conn.transaction():
         try:
             zrada_change = random.randint(1, 45)
             peremoga_change = random.randint(1, 25)
             event_start_chance = random.randint(0, 100)
             
-            # Получаем текущие значения
             current_zrada_level = await conn.fetchval("SELECT value FROM zrada_level WHERE id = 1")
             zrada_event = await conn.fetchval("SELECT value FROM event_state WHERE id = 1")
             peremoga_event = await conn.fetchval("SELECT value FROM event_state WHERE id = 2")
@@ -254,7 +246,6 @@ async def peremoga_command(message: Message):
             peremoga_change = random.randint(1, 25)
             event_start_chance = random.randint(0, 100)
 
-            # Получение текущих значений из базы данных
             current_zrada_level_row = await conn.fetchrow("SELECT * FROM zrada_level WHERE id = 1")
             current_zrada_level = current_zrada_level_row[2]
 
@@ -325,8 +316,58 @@ async def peremoga_command(message: Message):
                 f'Рiвень перемоги виріс.'
             ))
 
+@dp.message(F.text.in_({'ало','ало'}))
+async def openai_command(message: Message):
+    try:
+        chat_completion = client.chat.completions.create(
+        messages=[
+        {
+            "role": "user",
+            "content": message.text,
+        }
+        ],
+        model="gpt-3.5-turbo",
+        )
+        print(chat_completion)
 
+        reply = chat_completion.choices[0].message.content
+        
+        await message.answer(reply)
+    
+    except Exception as e:
+        print(chat_completion)
+        if "429" in str(e):
+            await message.answer("Слишком много запросов. Пожалуйста, попробуйте позже.")
+        else:
+            await message.answer(f"Произошла ошибка: {e}")
+        
+@dp.message(lambda message: message.reply_to_message and message.reply_to_message.from_user.id == 6694398809)
+async def handle_bot_reply(message: types.Message):
+    user_reply = message.text
+    original_message = message.reply_to_message.text
 
+    try:
+        chat_completion = await asyncio.to_thread(
+            client.chat.completions.create,
+            messages=[
+                {
+                    "role": "user",
+                    "content": original_message,  # Оригинальное сообщение
+                },
+                {
+                    "role": "user",
+                    "content": user_reply,  # Ответ пользователя
+                }
+            ],
+            model="gpt-3.5-turbo",
+        )
+
+        # Извлечение ответа
+        reply = chat_completion.choices[0].message.content
+        await message.answer(reply)
+
+    except Exception as e:
+        await message.answer(f"Произошла ошибка: {e}")
 
 
 
@@ -349,7 +390,7 @@ async def random_message(message: Message):
 
     # zrada
     elif any(keyword in cleaned_text for keyword in zrada):
-        conn = await get_connection()  # Вызовите и ожидайте соединение
+        conn = await get_connection()  
         async with conn.transaction():
             try:
                 zrada_change = random.randint(1, 45)
@@ -403,14 +444,13 @@ async def random_message(message: Message):
 
     # peremoga
     elif any(keyword in cleaned_text for keyword in peremoga):
-        conn = await get_connection()  # Вызовите и ожидайте соединение
+        conn = await get_connection()
         async with conn.transaction():
             try:
                 zrada_change = random.randint(1, 45)
                 peremoga_change = random.randint(1, 25)
                 event_start_chance = random.randint(0, 100)
 
-                # Запрос текущего уровня зрады и состояния событий
                 current_zrada_level, zrada_event, peremoga_event, event_start = await asyncio.gather(
                     conn.fetchval("SELECT value FROM zrada_level WHERE id = 1"),
                     conn.fetchval("SELECT value FROM event_state WHERE id = 1"),
@@ -455,14 +495,41 @@ async def random_message(message: Message):
             except Exception as e:
                 await message.answer(text='Спробуй ще: ' + str(e))
 
+    elif 'бот'  in cleaned_text:
+        original_message = message.reply_to_message.text if message.reply_to_message else message.text
+        if not original_message and message.reply_to_message:
+            if message.reply_to_message.caption:
+                original_message = message.reply_to_message.caption  # Используем заголовок медиа
+        else:
+            original_message = "Пересланное сообщение без текста."  # Сообщение для пользователя, если текст отсутствует
+        try:
+            chat_completion = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "user",
+                    "content": original_message,  # Передаем оригинальное сообщение
+                },
+                {
+                    "role": "user",
+                    "content": message.text,  # Передаем текст, который пользователь отправил
+                }
+            ],
+            model="gpt-3.5-turbo",
+            )
+            reply = chat_completion.choices[0].message.content
+            await message.answer(reply)
+        except Exception as e:
+            await message.answer(f"Произошла ошибка: {e}")
 
-        
-    
     elif any(keyword in cleaned_text for keyword in random_keyword):
-    
         await message.answer(random.choice(random_response))
+  
 
-        
+
+
+
+    
+
     
    
 
