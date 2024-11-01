@@ -362,7 +362,7 @@ async def handle_bot_reply(message: types.Message):
             model="gpt-4o-mini",
         )
 
-        # Извлечение ответod
+        # Извлечение отв
         reply = chat_completion.choices[0].message.content
         await message.answer(reply)
 
