@@ -359,7 +359,7 @@ async def handle_bot_reply(message: types.Message):
                     "content": user_reply,  # Ответ пользователя
                 }
             ],
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini",
         )
 
         # Извлечение ответа
@@ -514,7 +514,7 @@ async def random_message(message: Message):
                     "content": message.text,  # Передаем текст, который пользователь отправил
                 }
             ],
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini",
             )
             reply = chat_completion.choices[0].message.content
             await message.answer(reply)
