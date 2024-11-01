@@ -97,7 +97,7 @@ async def fetch_all_keywords_and_responses(conn):
 
 
 #zrada levels
-@dp.message(F.text.in_({'📊 Level', 'level', '/level', '/level@ZradaLevelsBot', 'level@ZradaLevelsBot'}))
+@dp.message(F.text.in_({'Level', 'level', '/level', '/level@ZradaLevelsBot', 'level@ZradaLevelsBot'}))
 async def help_command(message: Message):
     conn = await get_connection() 
     async with conn.transaction():
@@ -122,13 +122,13 @@ async def help_command(message: Message):
             else:
                 level = ''
         except Exception as e:
-            await message.answer(text='Виникла помилка: ' + str(e))
+            await message.answer(text='Виникла помилка: ' + str(e),reply_markup=None)
             return
-    await message.answer(text='Рівень зради: ' + str(current_zrada_level) + '\n' + level)
+    await message.answer(text='Рівень зради: ' + str(current_zrada_level) + '\n' + level,reply_markup=None)
 
 
 #bitcoin
-@dp.message(F.text.in_({'📈 BTC', 'btc', '/btc', '/btc@ZradaLevelsBot', 'btc@ZradaLevelsBot'}))
+@dp.message(F.text.in_({'BTC', 'btc', '/btc', '/btc@ZradaLevelsBot', 'btc@ZradaLevelsBot'}))
 async def btc_command(message: Message):
     try:
         async with aiohttp.ClientSession() as session:
@@ -139,11 +139,11 @@ async def btc_command(message: Message):
                 price = "{:.2f}".format(price)
     except:
         price = 'Спробуй ще разок'
-    await message.answer(text=str(price))
+    await message.answer(text=str(price),reply_markup=None)
 
 
 #bingo
-@dp.message(F.text.in_({'🎲 Bingo', 'bingo', '/bingo', '/bingo@ZradaLevelsBot', 'bingo@ZradaLevelsBot'}))
+@dp.message(F.text.in_({'Bingo', 'bingo', '/bingo', '/bingo@ZradaLevelsBot', 'bingo@ZradaLevelsBot'}))
 async def bingo_command(message: Message):
     conn = await get_connection()
     bmw, mamka, mamka_response, bingo, random_keyword, random_response = await fetch_all_keywords_and_responses(conn)
@@ -151,21 +151,21 @@ async def bingo_command(message: Message):
         text = random.choice(bingo)
     except IndexError:
         text = 'Спробуй ще разок'
-    await message.answer(text=text)
+    await message.answer(text=text,reply_markup=None)
  # , reply_markup=keyboard
 
 
 #roll
-@dp.message(F.text.in_({'🎲 Roll', 'roll', '/roll', '/roll@ZradaLevelsBot', 'roll@ZradaLevelsBot'}))
+@dp.message(F.text.in_({'Roll', 'roll', '/roll', '/roll@ZradaLevelsBot', 'roll@ZradaLevelsBot'}))
 async def bingo_command(message: Message):
     try:
         text = random.randint(0,100)
     except: 
         text = 'Спробуй ще разок'
-    await message.answer(text=f"{html.bold(message.from_user.full_name)} зролив {text}")
+    await message.answer(text=f"{html.bold(message.from_user.full_name)} зролив {text}",reply_markup=None)
 
 #@dp.message(F.text.in_({'', '', ''}))
-@dp.message(F.text.in_({'⚔️ Zrada', 'zrada', '/zrada', 'zrada@ZradaLevelsBot', '/zrada@ZradaLevelsBot'}))
+@dp.message(F.text.in_({'Zrada', 'zrada', '/zrada', 'zrada@ZradaLevelsBot', '/zrada@ZradaLevelsBot'}))
 async def zrada_command(message: Message):
     conn = await get_connection()  
     async with conn.transaction():
@@ -204,7 +204,7 @@ async def zrada_command(message: Message):
                         f'Усі зміни у рівні зради буде подвоєно.\n'
                         f'Рiвень зради росте до {current_zrada_level}.\n'
                         f'Рiвень перемоги впав.\nДякую за увагу'
-                    ))
+                    ),reply_markup=None)
                 else:
                     current_zrada_level += zrada_change
                     await conn.execute("UPDATE zrada_level SET value = $1 WHERE id = 1", current_zrada_level)
@@ -212,7 +212,7 @@ async def zrada_command(message: Message):
                     await message.answer(text=(
                         f'Рiвень зради росте до {current_zrada_level}.\n'
                         f'Рiвень перемоги впав.'
-                    ))
+                    ),reply_markup=None)
             elif peremoga_event:
                 current_zrada_level += zrada_change
                 await conn.execute("UPDATE zrada_level SET value = $1 WHERE id = 1", current_zrada_level)
@@ -221,7 +221,7 @@ async def zrada_command(message: Message):
                     f'Триває тиждень перемоги.\n'
                     f'Але рiвень зради все одно росте до {current_zrada_level}.\n'
                     f'Рiвень перемоги впав.'
-                ))
+                ),reply_markup=None)
             elif zrada_event:
                 current_zrada_level += zrada_change * 2
                 await conn.execute("UPDATE zrada_level SET value = $1 WHERE id = 1", current_zrada_level)
@@ -229,15 +229,15 @@ async def zrada_command(message: Message):
                 await message.answer(text=(
                     f'Триває тиждень зради. Рiвень зради росте до {current_zrada_level}.\n'
                     f'Рiвень перемоги впав.'
-                ))
+                ),reply_markup=None)
 
         except Exception as e:
-            await message.answer(text='error ' + str(e))
+            await message.answer(text='error ' + str(e),reply_markup=None)
 
 
     
 
-@dp.message(F.text.in_({'🏆 Peremoga', 'peremoga', '/peremoga', 'peremoga@ZradaLevelsBot', '/peremoga@ZradaLevelsBot'}))
+@dp.message(F.text.in_({'Peremoga', 'peremoga', '/peremoga', 'peremoga@ZradaLevelsBot', '/peremoga@ZradaLevelsBot'}))
 async def peremoga_command(message: Message):
     conn = await get_connection()
     async with conn.transaction():
@@ -287,7 +287,7 @@ async def peremoga_command(message: Message):
                     f'Усі зміни у рівні перемоги буде подвоєно.\n'
                     f'Рiвень зради падає до {current_zrada_level}.\n'
                     f'Рiвень перемоги виріс.\nДякую за увагу'
-                ))
+                ),reply_markup=None)
             else:
                 logging.info("event chance " + str(event_start_chance))
 
@@ -297,7 +297,7 @@ async def peremoga_command(message: Message):
                 await message.answer(text=(
                     f'Рiвень зради впав до {current_zrada_level}.\n'
                     f'Рiвень перемоги вирiс.'
-                ))
+                ),reply_markup=None)
         elif peremoga_event:
             current_zrada_level -= peremoga_change * 2
             await conn.execute("UPDATE zrada_level SET value = $1 WHERE id = 1", current_zrada_level)
@@ -306,7 +306,7 @@ async def peremoga_command(message: Message):
                 f'Триває тиждень перемоги.\n'
                 f'Рівень зради падає до {current_zrada_level}.\n'
                 f'Рiвень перемоги виріс.'
-            ))
+            ),reply_markup=None)
         elif zrada_event:
             current_zrada_level -= peremoga_change
             await conn.execute("UPDATE zrada_level SET value = $1 WHERE id = 1", current_zrada_level)
@@ -314,32 +314,32 @@ async def peremoga_command(message: Message):
             await message.answer(text=(
                 f'Триває тиждень зради. Але рівень її попри все падає до {current_zrada_level}.\n'
                 f'Рiвень перемоги виріс.'
-            ))
+            ),reply_markup=None)
 
-@dp.message(F.text.in_({'ало','ало'}))
-async def openai_command(message: Message):
-    try:
-        chat_completion = client.chat.completions.create(
-        messages=[
-        {
-            "role": "user",
-            "content": message.text,
-        }
-        ],
-        model="gpt-3.5-turbo",
-        )
-        print(chat_completion)
+# @dp.message(F.text.in_({'ало','ало'}))
+# async def openai_command(message: Message):
+#     try:
+#         chat_completion = client.chat.completions.create(
+#         messages=[
+#         {
+#             "role": "user",
+#             "content": message.text,
+#         }
+#         ],
+#         model="gpt-3.5-turbo",
+#         )
+#         print(chat_completion)
 
-        reply = chat_completion.choices[0].message.content
+#         reply = chat_completion.choices[0].message.content
         
-        await message.answer(reply)
+#         await message.answer(reply)
     
-    except Exception as e:
-        print(chat_completion)
-        if "429" in str(e):
-            await message.answer("Слишком много запросов. Пожалуйста, попробуйте позже.")
-        else:
-            await message.answer(f"Произошла ошибка: {e}")
+#     except Exception as e:
+#         print(chat_completion)
+#         if "429" in str(e):
+#             await message.answer("Слишком много запросов. Пожалуйста, попробуйте позже.")
+#         else:
+#             await message.answer(f"Произошла ошибка: {e}")
         
 @dp.message(lambda message: message.reply_to_message and message.reply_to_message.from_user.id == 6694398809)
 async def handle_bot_reply(message: types.Message):
@@ -364,10 +364,10 @@ async def handle_bot_reply(message: types.Message):
 
         # Извлечение отвe
         reply = chat_completion.choices[0].message.content
-        await message.answer(reply)
+        await message.answer(reply,reply_markup=None)
 
     except Exception as e:
-        await message.answer(f"Произошла ошибка: {e}")
+        await message.answer(f"Произошла ошибка: {e}",reply_markup=None)
 
 
 
@@ -382,11 +382,11 @@ async def random_message(message: Message):
 
     if any(keyword in cleaned_text for keyword in bmw):
         logging.info("bmw handler triggered.")
-        await message.answer("Беха топ")
+        await message.answer("Беха топ",reply_markup=None)
 
     elif any(keyword in cleaned_text for keyword in mamka):
         logging.info("mamka handler triggered.")
-        await message.answer(random.choice(mamka_response))
+        await message.answer(random.choice(mamka_response),reply_markup=None)
 
     # zrada
     elif any(keyword in cleaned_text for keyword in zrada):
@@ -425,21 +425,21 @@ async def random_message(message: Message):
                         await conn.execute("UPDATE zrada_level SET value = $1 WHERE id = 1", current_zrada_level)
                         await message.answer(
                             f"Астрологи оголосили тиждень зради.\nУсі зміни у рівні зради буде подвоєно.\nРiвень зради росте до {current_zrada_level}.\nРiвень перемоги впав.\nДякую за увагу"
-                        )
+                        ,reply_markup=None)
                     else:
                         current_zrada_level += zrada_change
                         await conn.execute("UPDATE zrada_level SET value = $1 WHERE id = 1", current_zrada_level)
-                        await message.answer(f"Рiвень зради росте до {current_zrada_level}.\nРiвень перемоги впав.")
+                        await message.answer(f"Рiвень зради росте до {current_zrada_level}.\nРiвень перемоги впав.",reply_markup=None)
                 elif peremoga_event:
                     current_zrada_level += zrada_change
                     await conn.execute("UPDATE zrada_level SET value = $1 WHERE id = 1", current_zrada_level)
-                    await message.answer(f"Триває тиждень перемоги.\nАле рiвень зради все одно росте до {current_zrada_level}.\nРiвень перемоги впав.")
+                    await message.answer(f"Триває тиждень перемоги.\nАле рiвень зради все одно росте до {current_zrada_level}.\nРiвень перемоги впав.",reply_markup=None)
                 elif zrada_event:
                     current_zrada_level += zrada_change * 2
                     await conn.execute("UPDATE zrada_level SET value = $1 WHERE id = 1", current_zrada_level)
-                    await message.answer(f"Триває тиждень зради. Рiвень зради росте до {current_zrada_level}.\nРiвень перемоги впав.")
+                    await message.answer(f"Триває тиждень зради. Рiвень зради росте до {current_zrada_level}.\nРiвень перемоги впав.",reply_markup=None)
             except Exception as e:
-                await message.answer(text='Виникла помилка: ' + str(e))
+                await message.answer(text='Виникла помилка: ' + str(e),reply_markup=None)
 
 
     # peremoga
@@ -478,22 +478,22 @@ async def random_message(message: Message):
                         await conn.execute("UPDATE zrada_level SET value = $1 WHERE id = 1", current_zrada_level)
                         await message.answer(
                             f"Астрологи оголосили тиждень перемоги.\nУсі зміни у рівні перемоги буде подвоєно.\nРiвень зради падає до {current_zrada_level}.\nРiвень перемоги виріс.\nДякую за увагу"
-                        )
+                        ,reply_markup=None)
                     else:
                         logging.info("event chance " + str(event_start_chance))
                         current_zrada_level -= peremoga_change
                         await conn.execute("UPDATE zrada_level SET value = $1 WHERE id = 1", current_zrada_level)
-                        await message.answer(f"Рiвень зради впав до {current_zrada_level}.\nРiвень перемоги вирiс.")
+                        await message.answer(f"Рiвень зради впав до {current_zrada_level}.\nРiвень перемоги вирiс.",reply_markup=None)
                 elif peremoga_event:
                     current_zrada_level -= peremoga_change * 2
                     await conn.execute("UPDATE zrada_level SET value = $1 WHERE id = 1", current_zrada_level)
-                    await message.answer(f"Триває тиждень перемоги.\nРівень зради падає до {current_zrada_level}.\nРiвень перемоги виріс.")
+                    await message.answer(f"Триває тиждень перемоги.\nРівень зради падає до {current_zrada_level}.\nРiвень перемоги виріс.",reply_markup=None)
                 elif zrada_event:
                     current_zrada_level -= peremoga_change
                     await conn.execute("UPDATE zrada_level SET value = $1 WHERE id = 1", current_zrada_level)
-                    await message.answer(f"Триває тиждень зради. Але рівень її попри все падає до {current_zrada_level}.\nРiвень перемоги виріс.")
+                    await message.answer(f"Триває тиждень зради. Але рівень її попри все падає до {current_zrada_level}.\nРiвень перемоги виріс.",reply_markup=None)
             except Exception as e:
-                await message.answer(text='Спробуй ще: ' + str(e))
+                await message.answer(text='Спробуй ще: ' + str(e),reply_markup=None)
 
     elif 'бот'  in cleaned_text:
         original_message = message.reply_to_message.text if message.reply_to_message else message.text
@@ -517,12 +517,12 @@ async def random_message(message: Message):
             model="gpt-4o-mini",
             )
             reply = chat_completion.choices[0].message.content
-            await message.answer(reply)
+            await message.answer(reply,reply_markup=None)
         except Exception as e:
             await message.answer(f"Произошла ошибка: {e}")
 
     elif any(keyword in cleaned_text for keyword in random_keyword):
-        await message.answer(random.choice(random_response))
+        await message.answer(random.choice(random_response),reply_markup=None)
   
 
 
