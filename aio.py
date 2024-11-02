@@ -495,7 +495,7 @@ async def random_message(message: Message):
             except Exception as e:
                 await message.answer(text='Спробуй ще: ' + str(e),reply_markup=None)
 
-    elif 'бот'  in cleaned_text:
+    elif 'стас'  in cleaned_text:
         original_message = message.reply_to_message.text if message.reply_to_message else message.text
         if not original_message and message.reply_to_message:
             if message.reply_to_message.caption:
