@@ -401,7 +401,8 @@ async def random_message(message: Message):
         await message.answer(random.choice(mamka_response))
 
     # zrada
-    elif any(keyword in cleaned_text for keyword in zrada): 
+    elif any(keyword in cleaned_text for keyword in zrada):
+        conn = await get_connection()  
         async with conn.transaction():
             try:
                 zrada_change = random.randint(1, 45)
@@ -453,6 +454,7 @@ async def random_message(message: Message):
 
     # peremoga
     elif any(keyword in cleaned_text for keyword in peremoga):
+        conn = await get_connection()
         async with conn.transaction():
             try:
                 zrada_change = random.randint(1, 45)
