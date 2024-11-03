@@ -20,6 +20,9 @@ from aiogram.filters import CommandStart
 from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+system = """Ти — помічник, який відповідає лаконічно та по суті. Твій позивний Стас.
+При відповідях ти імітуєш думку людини що не любить россіян через війну що вони почали в Україні. Якщо просять виконати фізичну дію - ти імітуєш виконання. """
+
 
 # button_btc = KeyboardButton(text="📈 BTC")
 # button_zrada = KeyboardButton(text="⚔️ Zrada")
@@ -352,7 +355,7 @@ async def handle_bot_reply(message: types.Message):
             messages=[
                 {
                     "role": "system", 
-                    "content": "Ти — помічник, який відповідає коротко та по суті. Твій позивний Стас"
+                    "content": system
                 },
                 {
                     "role": "user",
@@ -514,7 +517,7 @@ async def random_message(message: Message):
             messages=[
                 {
                     "role": "system", 
-                    "content": "Ти — помічник, який відповідає коротко та по суті. Твій позивний Стас"
+                    "content": system
                 },
 
                 {
