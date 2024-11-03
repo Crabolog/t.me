@@ -351,8 +351,12 @@ async def handle_bot_reply(message: types.Message):
             client.chat.completions.create,
             messages=[
                 {
+                    "role": "system", 
+                    "content": "Ти — помічник, який відповідає коротко та по суті."
+                },
+                {
                     "role": "user",
-                    "content": original_message,  # Оригинальное сообщение
+                    "content":"Попереднє повідомлення: " + original_message,  # Оригинальное сообщение
                 },
                 {
                     "role": "user",
@@ -360,6 +364,7 @@ async def handle_bot_reply(message: types.Message):
                 }
             ],
             model="gpt-4o-mini",
+            max_tokens=50
         )
 
         # Извлечение отвe
@@ -386,7 +391,8 @@ async def random_message(message: Message):
 
     elif any(keyword in cleaned_text for keyword in mamka):
         logging.info("mamka handler triggered.")
-        await message.answer(random.choice(mamka_response),reply_markup=None)
+        await message.answer('пытаюсь пошутить')
+        await message.answer(random.choice(mamka_response))
 
     # zrada
     elif any(keyword in cleaned_text for keyword in zrada):
@@ -507,8 +513,13 @@ async def random_message(message: Message):
             chat_completion = client.chat.completions.create(
             messages=[
                 {
+                    "role": "system", 
+                    "content": "Ти — помічник, який відповідає коротко та по суті. Твій позивний Стас"
+                },
+
+                {
                     "role": "user",
-                    "content": original_message,  # Передаем оригинальное сообщение
+                    "content": "Попереднє повідомлення: "+ original_message,  # Передаем оригинальное сообщение
                 },
                 {
                     "role": "user",
@@ -516,6 +527,7 @@ async def random_message(message: Message):
                 }
             ],
             model="gpt-4o-mini",
+            max_tokens=50
             )
             reply = chat_completion.choices[0].message.content
             await message.answer(reply,reply_markup=None)
