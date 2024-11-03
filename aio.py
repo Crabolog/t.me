@@ -497,6 +497,7 @@ async def random_message(message: Message):
 
     elif 'стас'  in cleaned_text:
         original_message = message.reply_to_message.text if message.reply_to_message else message.text
+        cleaned_message_text = message.text.replace('стас', '').strip()
         if not original_message and message.reply_to_message:
             if message.reply_to_message.caption:
                 original_message = message.reply_to_message.caption  # Используем заголовок медиа
@@ -511,7 +512,7 @@ async def random_message(message: Message):
                 },
                 {
                     "role": "user",
-                    "content": message.text,  # Передаем текст, который пользователь отправил
+                    "content":cleaned_message_text,  # Передаем текст, который пользователь отправил
                 }
             ],
             model="gpt-4o-mini",
