@@ -401,8 +401,7 @@ async def random_message(message: Message):
         await message.answer(random.choice(mamka_response))
 
     # zrada
-    elif any(keyword in cleaned_text for keyword in zrada):
-        conn = await get_connection()  
+    elif any(keyword in cleaned_text for keyword in zrada): 
         async with conn.transaction():
             try:
                 zrada_change = random.randint(1, 45)
@@ -410,12 +409,10 @@ async def random_message(message: Message):
                 event_start_chance = random.randint(0, 100)
 
                 # Запрос текущего уровня зрады и состояния событий
-                current_zrada_level, zrada_event, peremoga_event, event_start = await asyncio.gather(
-                    conn.fetchval("SELECT value FROM zrada_level WHERE id = 1"),
-                    conn.fetchval("SELECT value FROM event_state WHERE id = 1"),
-                    conn.fetchval("SELECT value FROM event_state WHERE id = 2"),
-                    conn.fetchval("SELECT value FROM event_date WHERE name = 'start_date'")
-                )
+                current_zrada_level = await conn.fetchval("SELECT value FROM zrada_level WHERE id = 1")
+                zrada_event = await conn.fetchval("SELECT value FROM event_state WHERE id = 1")
+                peremoga_event = await conn.fetchval("SELECT value FROM event_state WHERE id = 2")
+                event_start = await conn.fetchval("SELECT value FROM event_date WHERE name = 'start_date'")
 
                 event_end = int(datetime.datetime.now().strftime('%Y%m%d'))
                 event_days = event_end - int(event_start)
@@ -456,19 +453,16 @@ async def random_message(message: Message):
 
     # peremoga
     elif any(keyword in cleaned_text for keyword in peremoga):
-        conn = await get_connection()
         async with conn.transaction():
             try:
                 zrada_change = random.randint(1, 45)
                 peremoga_change = random.randint(1, 25)
                 event_start_chance = random.randint(0, 100)
 
-                current_zrada_level, zrada_event, peremoga_event, event_start = await asyncio.gather(
-                    conn.fetchval("SELECT value FROM zrada_level WHERE id = 1"),
-                    conn.fetchval("SELECT value FROM event_state WHERE id = 1"),
-                    conn.fetchval("SELECT value FROM event_state WHERE id = 2"),
-                    conn.fetchval("SELECT value FROM event_date WHERE name = 'start_date'")
-                )
+                current_zrada_level = await conn.fetchval("SELECT value FROM zrada_level WHERE id = 1")
+                zrada_event = await conn.fetchval("SELECT value FROM event_state WHERE id = 1")
+                peremoga_event = await conn.fetchval("SELECT value FROM event_state WHERE id = 2")
+                event_start = await conn.fetchval("SELECT value FROM event_date WHERE name = 'start_date'")
 
                 event_end = int(datetime.datetime.now().strftime('%Y%m%d'))
                 event_days = event_end - int(event_start)
