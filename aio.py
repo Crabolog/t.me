@@ -396,7 +396,8 @@ async def random_message(message: Message):
 
     elif any(keyword in cleaned_text for keyword in mamka):
         logging.info("mamka handler triggered.")
-        await message.answer('пытаюсь пошутить')
+        await message.answer(mamka_response)
+
         await message.answer(random.choice(mamka_response))
 
     # zrada
@@ -541,7 +542,8 @@ async def random_message(message: Message):
 
     elif any(keyword in cleaned_text for keyword in random_keyword):
         await message.answer(random.choice(random_response),reply_markup=None)
-  
+
+
 
 
 
