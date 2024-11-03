@@ -352,7 +352,7 @@ async def handle_bot_reply(message: types.Message):
             messages=[
                 {
                     "role": "system", 
-                    "content": "Ти — помічник, який відповідає коротко та по суті."
+                    "content": "Ти — помічник, який відповідає коротко та по суті. Твій позивний Стас"
                 },
                 {
                     "role": "user",
@@ -364,7 +364,7 @@ async def handle_bot_reply(message: types.Message):
                 }
             ],
             model="gpt-4o-mini",
-            max_tokens=50
+            max_tokens=150
         )
 
         # Извлечение отвe
@@ -527,7 +527,7 @@ async def random_message(message: Message):
                 }
             ],
             model="gpt-4o-mini",
-            max_tokens=50
+            max_tokens=150
             )
             reply = chat_completion.choices[0].message.content
             await message.answer(reply,reply_markup=None)
