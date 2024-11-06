@@ -511,13 +511,12 @@ async def random_message(message: Message):
                 await message.answer(text='Спробуй ще: ' + str(e),reply_markup=None)
 
     elif 'стас'  in cleaned_text:
-        original_message = message.reply_to_message.text if message.reply_to_message else message.text
+        
         cleaned_message_text = message.text.replace('стас', '').strip()
-        if not original_message and message.reply_to_message:
-            if message.reply_to_message.caption:
-                original_message = message.reply_to_message.caption  # Используем заголовок медиа
-        else:
-            original_message = "Пересланное сообщение без текста."  # Сообщение для пользователя, если текст отсутствует
+        original_message = (
+        message.reply_to_message.text if message.reply_to_message and message.reply_to_message.text 
+        else "Пересланное сообщение без текста."
+    )
         try:
             chat_completion = client.chat.completions.create(
             messages=[
@@ -538,6 +537,11 @@ async def random_message(message: Message):
             model="gpt-4o-mini",
             max_tokens=150
             )
+            print(1)
+            print(message.reply_to_message)
+            print(2)
+            print(message.reply_to_message.caption)
+            print(original_message)
             reply = chat_completion.choices[0].message.content
             await message.answer(reply,reply_markup=None)
         except Exception as e:
