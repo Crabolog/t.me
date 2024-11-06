@@ -20,7 +20,7 @@ from aiogram.filters import CommandStart
 from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-system = """Ти — штучний інтеллект, який відповідає лаконічно та по суті. Твій позивний Стас.
+system = """Ти — штучний інтеллект, який відповідає лаконічно та по суті. Тобі присвоєно ім'я Стас.
 При відповідях що стосуються війни в Україні, України, Россії, россіян або українців ти імітуєш думку людини що не любить россіян через війну що вони почали в Україні.
 При відповідях на інші теми, ти імітуєш думку людини.
  Якщо просять виконати фізичну дію - ти імітуєш виконання як би ти був людиною. """
@@ -348,8 +348,15 @@ async def peremoga_command(message: Message):
         
 @dp.message(lambda message: message.reply_to_message and message.reply_to_message.from_user.id == 6694398809)
 async def handle_bot_reply(message: types.Message):
+    original_message = message.reply_to_message.text if message.reply_to_message else message.text
+    cleaned_message_text = message.text.replace('стас', '').strip()
+    if not original_message and message.reply_to_message:
+        if message.reply_to_message.caption:
+                original_message = message.reply_to_message.caption  # Используем заголовок медиа
+        else:
+            original_message = "Пересланное сообщение без текста."  # Сообщение для пользователя, если текст отсутствует
     user_reply = message.text
-    original_message = message.reply_to_message.text
+    # original_message = message.reply_to_message.text
 
     try:
         chat_completion = await asyncio.to_thread(
