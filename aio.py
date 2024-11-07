@@ -476,31 +476,32 @@ async def handle_bot_reply(message: types.Message):
         if len(cleaned_message_text) > 14  and '?' not in cleaned_message_text:
             await save_embedding(cleaned_message_text,embedding)
         else:
-            chat_completion = await asyncio.to_thread(
-                client.chat.completions.create,
-                messages=[
-                    {
-                        "role": "system", 
-                        "content": system
-                    },
-                    {
-                        "role": "user",
-                        "content": similar_info,  # Передаем информацию о похожих сообщениях
-                    },
-                    {
-                        "role": "user",
-                        "content":"Попереднє повідомлення: " + original_message,  # Оригинальное сообщение
-                    },
-                    {
-                        "role": "user",
-                        "content": user_reply,  # Ответ пользователя
-                    }
-                ],
-                model="gpt-4o-mini",
-                max_tokens=175
-            )
-            reply = chat_completion.choices[0].message.content
-            await message.answer(reply,reply_markup=None)
+            pass
+        chat_completion = await asyncio.to_thread(
+            client.chat.completions.create,
+            messages=[
+                {
+                    "role": "system", 
+                    "content": system
+                },
+                {
+                    "role": "user",
+                    "content": similar_info,  # Передаем информацию о похожих сообщениях
+                },
+                {
+                    "role": "user",
+                    "content":"Попереднє повідомлення: " + original_message,  # Оригинальное сообщение
+                },
+                {
+                    "role": "user",
+                    "content": user_reply,  # Ответ пользователя
+                }
+            ],
+            model="gpt-4o-mini",
+            max_tokens=175
+        )
+        reply = chat_completion.choices[0].message.content
+        await message.answer(reply,reply_markup=None)
     except Exception as e:
         await message.answer(f"Произошла ошибка: {e}",reply_markup=None)
     
@@ -650,30 +651,31 @@ async def random_message(message: Message):
             if len(cleaned_message_text) > 14  and '?' not in cleaned_message_text:
                 await save_embedding(cleaned_message_text,embedding)
             else:
-                chat_completion = client.chat.completions.create(
-                messages=[
-                    {
-                        "role": "system", 
-                        "content": system
-                    },
-                    {
-                        "role": "user",
-                        "content": "Попереднє повідомлення: "+ original_message,  # Передаем оригинальное сообщение
-                    },
-                    {
-                        "role": "user",
-                        "content": similar_info,  # Передаем информацию о похожих сообщениях
-                    },
-                    {
-                        "role": "user",
-                        "content":cleaned_message_text,  # Передаем текст, который пользователь отправил
-                    }
-                ],
-                model="gpt-4o-mini",
-                max_tokens=175
-                )
-                reply = chat_completion.choices[0].message.content
-                await message.answer(reply,reply_markup=None)
+                pass
+            chat_completion = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system", 
+                    "content": system
+                },
+                {
+                    "role": "user",
+                    "content": "Попереднє повідомлення: "+ original_message,  # Передаем оригинальное сообщение
+                },
+                {
+                    "role": "user",
+                    "content": similar_info,  # Передаем информацию о похожих сообщениях
+                },
+                {
+                    "role": "user",
+                    "content":cleaned_message_text,  # Передаем текст, который пользователь отправил
+                }
+            ],
+            model="gpt-4o-mini",
+            max_tokens=175
+            )
+            reply = chat_completion.choices[0].message.content
+            await message.answer(reply,reply_markup=None)
         except Exception as e:
             await message.answer(f"Произошла ошибка: {e}")
         
