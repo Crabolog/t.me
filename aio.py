@@ -466,7 +466,7 @@ async def handle_bot_reply(message: types.Message):
             original_message = "Пересланное сообщение без текста."  # Сообщение для пользователя, если текст отсутствует
     user_reply = message.text
     # original_message = message.reply_to_message.text
-    if len(cleaned_message_text) > 14:
+    if len(cleaned_message_text) > 14  and '?' not in cleaned_message_text:
         try:
             embedding = generate_embedding(cleaned_message_text)
             similar_messages = await find_similar_messages(embedding, threshold=0.8)
@@ -673,7 +673,7 @@ async def random_message(message: Message):
         else "Пересланное сообщение без текста."
         
     )
-        if len(cleaned_message_text) > 12:
+        if len(cleaned_message_text) > 14  and '?' not in cleaned_message_text:
             try:
                 embedding = generate_embedding(cleaned_message_text)
                 similar_messages = await find_similar_messages(embedding, threshold=0.8)
