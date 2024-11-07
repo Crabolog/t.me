@@ -13,13 +13,18 @@ import psycopg
 import random
 import openai
 from openai import OpenAI
-from aiogram import Bot, Dispatcher, html, F, types
+from aiogram import Bot, Dispatcher, html, F, types, Router
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+import numpy as np
+
+
+
+
 system = """Ти — штучний інтеллект, який відповідає лаконічно та по суті. Тобі присвоєно ім'я Стас.
 При відповідях що стосуються війни в Україні, України, Россії, россіян або українців ти імітуєш думку людини що не любить россіян через війну що вони почали в Україні.
 При відповідях на інші теми, ти імітуєш думку людини.
@@ -51,9 +56,10 @@ logging.basicConfig(level=logging.INFO)
 # All handlers should be attached to the Router (or Dispatcher)
 
 dp = Dispatcher()
+router = Router()
 conn.autocommit = True
 cursor = conn.cursor()
-
+openai.api_key = OPENAI_API_KEY
 client = OpenAI(
     # This is the default and can be omitted
     api_key=OPENAI_API_KEY
@@ -99,7 +105,101 @@ async def fetch_all_keywords_and_responses(conn):
     finally:
         await conn.close()
 
+def generate_embedding(text: str):
+    # Synchronous call to OpenAI API to generate embedding
+    response = openai.embeddings.create(
+        model="text-embedding-ada-002",
+        input=text
+    )
+    
+    embedding = response.data[0].embedding  # Access the 'embedding' field
+    return embedding
 
+
+async def save_embedding_to_db(text: str, embedding: np.ndarray, threshold=0.9):
+    conn = await get_connection() 
+    existing_embeddings = await get_embeddings_from_db()
+
+    # Check for similarity with existing embeddings
+    for existing_text, existing_embedding in existing_embeddings:
+        similarity = cosine_similarity(embedding, existing_embedding)
+        print(f"Проверка сходства с: '{existing_text}' (сходство: {similarity:.2f})")
+        if similarity >= threshold:
+            print(text)
+            print(f"Похожее сообщение найдено: '{existing_text}' с уровнем сходства {similarity:.2f}")
+            print(f"Skipping save: Similar message found with similarity {similarity:.2f}")
+            return  # Skip saving since a similar embedding exists
+
+    try:
+        print(text)
+        query = """
+        INSERT INTO embeddings (text, embedding) 
+        VALUES ($1, $2)
+        """
+        print(f"message saved")
+        await conn.execute(query, text, embedding)
+    finally:
+        await conn.close() 
+
+
+async def save_embedding(text: str, embedding):
+    await save_embedding_to_db(text, embedding)
+
+
+async def get_embeddings_from_db():
+    conn = await get_connection()
+    query = "SELECT text, embedding FROM embeddings"
+    rows = await conn.fetch(query)
+    return [(row['text'], np.array(row['embedding'])) for row in rows]
+
+
+def cosine_similarity(vec1, vec2):
+    return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
+
+async def find_similar_messages(new_text, threshold=0.8):
+    new_embedding = new_text  # Получаем эмбеддинг для нового текста
+
+    embeddings_db = await get_embeddings_from_db()  # Извлекаем эмбеддинги из базы данных
+
+    similar_messages = []
+    for saved_text, saved_embedding in embeddings_db:
+        similarity = cosine_similarity(new_embedding, saved_embedding)  # Рассчитываем сходство
+        if similarity >= threshold:  # Если сходство выше порога
+            similar_messages.append((saved_text, similarity))
+    
+    return similar_messages
+
+async def delete_embedding_from_db(embedding_text: str):
+    """Удаляет эмбеддинг из базы по тексту."""
+    conn = await get_connection()
+    query = """
+    DELETE FROM embeddings 
+    WHERE text ILIKE $1  -- Используем ILIKE для нечувствительного к регистру поиска
+    RETURNING *;
+    """
+    # Выполняем запрос и проверяем, были ли удалены записи
+    result = await conn.fetch(query, f"%{embedding_text}%")  # Поиск по шаблону
+    await conn.close()
+
+    # Если результат не пустой, то удаление было успешным
+    return len(result) > 0
+
+@dp.message(Command("delete"))
+async def delete_embedding_handler(message: Message):
+    text = message.text.strip()  # Убираем пробелы по бокам
+    args = text.split(maxsplit=1)  # Разделяем строку на команду и аргументы
+
+    if len(args) > 1:
+        embedding_text = args[1]  # Аргумент после команды
+        # Попробуем удалить эмбеддинг
+        deleted = await delete_embedding_from_db(embedding_text)
+        
+        if deleted:
+            await message.reply(f"Дані з текстом '{embedding_text}' було видалено.")
+        else:
+            await message.reply(f"Даних для тексту '{embedding_text}' не знайдено в базі.")
+    else:
+        await message.reply("Будь ласка, вкажіть текст для видалення. Формат: /delete <текст>")
 
 #zrada levels
 @dp.message(F.text.in_({'Level', 'level', '/level', '/level@ZradaLevelsBot', 'level@ZradaLevelsBot'}))
@@ -145,6 +245,13 @@ async def btc_command(message: Message):
     except:
         price = 'Спробуй ще разок'
     await message.answer(text=str(price),reply_markup=None)
+
+
+
+
+
+# @dp.message(F.text.in_({'/delete', 'delete'}))
+# 
 
 
 #bingo
@@ -349,7 +456,7 @@ async def peremoga_command(message: Message):
 @dp.message(lambda message: message.reply_to_message and message.reply_to_message.from_user.id == 6694398809)
 async def handle_bot_reply(message: types.Message):
     original_message = message.reply_to_message.text if message.reply_to_message else message.text
-    cleaned_message_text = message.text.replace('стас', '').strip()
+    cleaned_message_text = re.sub(r'\bстас\b', '', message.text, flags=re.IGNORECASE).strip()
     if not original_message and message.reply_to_message:
         if message.reply_to_message.caption:
                 original_message = message.reply_to_message.caption  # Используем заголовок медиа
@@ -357,34 +464,77 @@ async def handle_bot_reply(message: types.Message):
             original_message = "Пересланное сообщение без текста."  # Сообщение для пользователя, если текст отсутствует
     user_reply = message.text
     # original_message = message.reply_to_message.text
+    if len(cleaned_message_text) > 14:
+        try:
+            embedding = generate_embedding(cleaned_message_text)
+            similar_messages = await find_similar_messages(embedding, threshold=0.8)
 
-    try:
-        chat_completion = await asyncio.to_thread(
-            client.chat.completions.create,
-            messages=[
-                {
-                    "role": "system", 
-                    "content": system
-                },
-                {
-                    "role": "user",
-                    "content":"Попереднє повідомлення: " + original_message,  # Оригинальное сообщение
-                },
-                {
-                    "role": "user",
-                    "content": user_reply,  # Ответ пользователя
-                }
-            ],
-            model="gpt-4o-mini",
-            max_tokens=150
-        )
+            if similar_messages:
+                    similar_info = "\n".join([f"Похожее сообщение: {msg[0]} (сходство: {msg[1]:.2f})" for msg in similar_messages])
+            else:
+                similar_info = "Похожих сообщений не найдено."
 
-        # Извлечение отвe
-        reply = chat_completion.choices[0].message.content
-        await message.answer(reply,reply_markup=None)
+            await save_embedding(cleaned_message_text,embedding)
 
-    except Exception as e:
-        await message.answer(f"Произошла ошибка: {e}",reply_markup=None)
+            chat_completion = await asyncio.to_thread(
+                client.chat.completions.create,
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": system
+                    },
+                    {
+                        "role": "user",
+                        "content": similar_info,  # Передаем информацию о похожих сообщениях
+                    },
+                    {
+                        "role": "user",
+                        "content":"Попереднє повідомлення: " + original_message,  # Оригинальное сообщение
+                    },
+
+                    {
+                        "role": "user",
+                        "content": user_reply,  # Ответ пользователя
+                    }
+                ],
+                model="gpt-4o-mini",
+                max_tokens=200
+            )
+
+            reply = chat_completion.choices[0].message.content
+            await message.answer(reply,reply_markup=None)
+
+        except Exception as e:
+            await message.answer(f"Произошла ошибка: {e}",reply_markup=None)
+    else:
+        try:
+            chat_completion = await asyncio.to_thread(
+                client.chat.completions.create,
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": system
+                    },
+                    {
+                        "role": "user",
+                        "content":"Попереднє повідомлення: " + original_message,
+                    },
+
+                    {
+                        "role": "user",
+                        "content": user_reply,  
+                    }
+                ],
+                model="gpt-4o-mini",
+                max_tokens=200
+            )
+
+            reply = chat_completion.choices[0].message.content
+            await message.answer(reply,reply_markup=None)
+
+        except Exception as e:
+            await message.answer(f"Произошла ошибка: {e}",reply_markup=None)
+    
 
 
 
@@ -403,6 +553,8 @@ async def random_message(message: Message):
 
     elif any(keyword in cleaned_text for keyword in mamka):
         logging.info("mamka handler triggered.")
+        await message.answer('намагаюсь пожартувати')
+        await message.answer(2)
         await message.answer(mamka_response)
 
         await message.answer(random.choice(mamka_response))
@@ -512,36 +664,78 @@ async def random_message(message: Message):
 
     elif 'стас'  in cleaned_text:
         
-        cleaned_message_text = message.text.replace('стас', '').strip()
+        cleaned_message_text = re.sub(r'\bстас\b', '', message.text, flags=re.IGNORECASE).strip()
         original_message = (
         message.reply_to_message.text if message.reply_to_message and message.reply_to_message.text 
         else "Пересланное сообщение без текста."
+        
     )
-        try:
-            chat_completion = client.chat.completions.create(
-            messages=[
-                {
-                    "role": "system", 
-                    "content": system
-                },
+        if len(cleaned_message_text) > 12:
+            try:
+                embedding = generate_embedding(cleaned_message_text)
+                similar_messages = await find_similar_messages(embedding, threshold=0.8)
 
-                {
-                    "role": "user",
-                    "content": "Попереднє повідомлення: "+ original_message,  # Передаем оригинальное сообщение
-                },
-                {
-                    "role": "user",
-                    "content":cleaned_message_text,  # Передаем текст, который пользователь отправил
-                }
-            ],
-            model="gpt-4o-mini",
-            max_tokens=150
-            )
-           
-            reply = chat_completion.choices[0].message.content
-            await message.answer(reply,reply_markup=None)
-        except Exception as e:
-            await message.answer(f"Произошла ошибка: {e}")
+                if similar_messages:
+                    similar_info = "\n".join([f"Похожее сообщение: {msg[0]} (сходство: {msg[1]:.2f})" for msg in similar_messages])
+                else:
+                    similar_info = "Похожих сообщений не найдено."
+
+                await save_embedding(cleaned_message_text,embedding)
+
+                chat_completion = client.chat.completions.create(
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": system
+                    },
+
+                    {
+                        "role": "user",
+                        "content": "Попереднє повідомлення: "+ original_message,  # Передаем оригинальное сообщение
+                    },
+                    {
+                        "role": "user",
+                        "content": similar_info,  # Передаем информацию о похожих сообщениях
+                    },
+                    {
+                        "role": "user",
+                        "content":cleaned_message_text,  # Передаем текст, который пользователь отправил
+                    }
+                ],
+                model="gpt-4o-mini",
+                max_tokens=200
+                )
+
+                reply = chat_completion.choices[0].message.content
+                await message.answer(reply,reply_markup=None)
+            except Exception as e:
+                await message.answer(f"Произошла ошибка: {e}")
+        else:
+            try:
+                chat_completion = client.chat.completions.create(
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": system
+                    },
+    
+                    {
+                        "role": "user",
+                        "content": "Попереднє повідомлення: "+ original_message,  # Передаем оригинальное сообщение
+                    },
+                    {
+                        "role": "user",
+                        "content":cleaned_message_text,  # Передаем текст, который пользователь отправил
+                    }
+                ],
+                model="gpt-4o-mini",
+                max_tokens=200
+                )
+               
+                reply = chat_completion.choices[0].message.content
+                await message.answer(reply,reply_markup=None)
+            except Exception as e:
+                await message.answer(f"Произошла ошибка: {e}")
 
     elif any(keyword in cleaned_text for keyword in random_keyword):
         await message.answer(random.choice(random_response),reply_markup=None)
@@ -596,7 +790,7 @@ async def random_message(message: Message):
 #         # But not all the types is supported to be copied so need to handle it
 #         await message.answer("Nice try!")
 
-
+dp.include_router(router)
 async def main() -> None:
     # Initialize Bot instance with default bot properties which will be passed to all API calls
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
