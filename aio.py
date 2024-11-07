@@ -465,19 +465,18 @@ async def handle_bot_reply(message: types.Message):
         else:
             original_message = "Пересланное сообщение без текста."  # Сообщение для пользователя, если текст отсутствует
     user_reply = message.text
-    # original_message = message.reply_to_message.text
-    if len(cleaned_message_text) > 14  and '?' not in cleaned_message_text:
-        try:
-            embedding = generate_embedding(cleaned_message_text)
-            similar_messages = await find_similar_messages(embedding, threshold=0.8)
-
-            if similar_messages:
-                    similar_info = "\n".join([f"Похожее сообщение: {msg[0]} (сходство: {msg[1]:.2f})" for msg in similar_messages])
-            else:
-                similar_info = "Похожих сообщений не найдено."
-
+    
+    # if len(cleaned_message_text) > 14  and '?' not in cleaned_message_text:
+    try:
+        embedding = generate_embedding(cleaned_message_text)
+        similar_messages = await find_similar_messages(embedding, threshold=0.8)
+        if similar_messages:
+                similar_info = "\n".join([f"Похожее сообщение: {msg[0]} (сходство: {msg[1]:.2f})" for msg in similar_messages])
+        else:
+            similar_info = "Похожих сообщений не найдено."
+        if len(cleaned_message_text) > 14  and '?' not in cleaned_message_text:
             await save_embedding(cleaned_message_text,embedding)
-
+        else:
             chat_completion = await asyncio.to_thread(
                 client.chat.completions.create,
                 messages=[
@@ -493,49 +492,19 @@ async def handle_bot_reply(message: types.Message):
                         "role": "user",
                         "content":"Попереднє повідомлення: " + original_message,  # Оригинальное сообщение
                     },
-
                     {
                         "role": "user",
                         "content": user_reply,  # Ответ пользователя
                     }
                 ],
                 model="gpt-4o-mini",
-                max_tokens=200
+                max_tokens=175
             )
-
             reply = chat_completion.choices[0].message.content
             await message.answer(reply,reply_markup=None)
-
-        except Exception as e:
-            await message.answer(f"Произошла ошибка: {e}",reply_markup=None)
-    else:
-        try:
-            chat_completion = await asyncio.to_thread(
-                client.chat.completions.create,
-                messages=[
-                    {
-                        "role": "system", 
-                        "content": system
-                    },
-                    {
-                        "role": "user",
-                        "content":"Попереднє повідомлення: " + original_message,
-                    },
-
-                    {
-                        "role": "user",
-                        "content": user_reply,  
-                    }
-                ],
-                model="gpt-4o-mini",
-                max_tokens=200
-            )
-
-            reply = chat_completion.choices[0].message.content
-            await message.answer(reply,reply_markup=None)
-
-        except Exception as e:
-            await message.answer(f"Произошла ошибка: {e}",reply_markup=None)
+    except Exception as e:
+        await message.answer(f"Произошла ошибка: {e}",reply_markup=None)
+    
     
 
 
@@ -671,27 +640,23 @@ async def random_message(message: Message):
         original_message = (
         message.reply_to_message.text if message.reply_to_message and message.reply_to_message.text 
         else "Пересланное сообщение без текста."
-        
-    )
-        if len(cleaned_message_text) > 14  and '?' not in cleaned_message_text:
-            try:
-                embedding = generate_embedding(cleaned_message_text)
-                similar_messages = await find_similar_messages(embedding, threshold=0.8)
-
-                if similar_messages:
-                    similar_info = "\n".join([f"Похожее сообщение: {msg[0]} (сходство: {msg[1]:.2f})" for msg in similar_messages])
-                else:
-                    similar_info = "Похожих сообщений не найдено."
-
+        )
+        try:
+            embedding = generate_embedding(cleaned_message_text)
+            similar_messages = await find_similar_messages(embedding, threshold=0.8)
+            if similar_messages:
+                similar_info = "\n".join([f"Похожее сообщение: {msg[0]} (сходство: {msg[1]:.2f})" for msg in similar_messages])
+            else:
+                similar_info = "Похожих сообщений не найдено."
+            if len(cleaned_message_text) > 14  and '?' not in cleaned_message_text:
                 await save_embedding(cleaned_message_text,embedding)
-
+            else:
                 chat_completion = client.chat.completions.create(
                 messages=[
                     {
                         "role": "system", 
                         "content": system
                     },
-
                     {
                         "role": "user",
                         "content": "Попереднє повідомлення: "+ original_message,  # Передаем оригинальное сообщение
@@ -706,40 +671,13 @@ async def random_message(message: Message):
                     }
                 ],
                 model="gpt-4o-mini",
-                max_tokens=200
+                max_tokens=175
                 )
-
                 reply = chat_completion.choices[0].message.content
                 await message.answer(reply,reply_markup=None)
-            except Exception as e:
-                await message.answer(f"Произошла ошибка: {e}")
-        else:
-            try:
-                chat_completion = client.chat.completions.create(
-                messages=[
-                    {
-                        "role": "system", 
-                        "content": system
-                    },
-    
-                    {
-                        "role": "user",
-                        "content": "Попереднє повідомлення: "+ original_message,  # Передаем оригинальное сообщение
-                    },
-                    {
-                        "role": "user",
-                        "content":cleaned_message_text,  # Передаем текст, который пользователь отправил
-                    }
-                ],
-                model="gpt-4o-mini",
-                max_tokens=200
-                )
-               
-                reply = chat_completion.choices[0].message.content
-                await message.answer(reply,reply_markup=None)
-            except Exception as e:
-                await message.answer(f"Произошла ошибка: {e}")
-
+        except Exception as e:
+            await message.answer(f"Произошла ошибка: {e}")
+        
     elif any(keyword in cleaned_text for keyword in random_keyword):
         await message.answer(random.choice(random_response),reply_markup=None)
 
