@@ -537,11 +537,7 @@ async def random_message(message: Message):
             model="gpt-4o-mini",
             max_tokens=150
             )
-            print(1)
-            print(message.reply_to_message)
-            print(2)
-            print(message.reply_to_message.caption)
-            print(original_message)
+           
             reply = chat_completion.choices[0].message.content
             await message.answer(reply,reply_markup=None)
         except Exception as e:
