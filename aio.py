@@ -458,7 +458,7 @@ async def peremoga_command(message: Message):
 async def handle_bot_reply(message: types.Message):
     original_message = message.reply_to_message.text if message.reply_to_message else message.text
     cleaned_message_text = re.sub(r'\bстас\b', '', message.text, flags=re.IGNORECASE).strip()
-    cleaned_message_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", cleaned_message_text.lower()).strip()
+    cleaned_message_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!,]", "", cleaned_message_text.lower()).strip()
     if not original_message and message.reply_to_message:
         if message.reply_to_message.caption:
                 original_message = message.reply_to_message.caption  # Используем заголовок медиа
@@ -667,7 +667,7 @@ async def random_message(message: Message):
     elif 'стас'  in cleaned_text:
         
         cleaned_message_text = re.sub(r'\bстас\b', '', message.text, flags=re.IGNORECASE).strip()
-        cleaned_message_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", cleaned_message_text.lower()).strip()
+        cleaned_message_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!,]", "", cleaned_message_text.lower()).strip()
         original_message = (
         message.reply_to_message.text if message.reply_to_message and message.reply_to_message.text 
         else "Пересланное сообщение без текста."
