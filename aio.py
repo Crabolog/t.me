@@ -537,7 +537,6 @@ async def random_message(message: Message):
 
     elif any(keyword in cleaned_text for keyword in mamka):
         logging.info("mamka handler triggered.")
-        await message.answer('намагаюсь пожартувати')
         await message.answer(random.choice(mamka_response))
 
     # zrada
