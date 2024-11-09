@@ -83,8 +83,17 @@ client = OpenAI(
 
 async def fetch_all_keywords_and_responses(conn):
     try:
-        rows = await conn.fetch("SELECT keyword, category FROM keywords UNION ALL SELECT response, category FROM responses")
-        
+    # Запрос по таблице keywords
+        keywords_rows = await conn.fetch("SELECT keyword, category FROM keywords")
+
+        # Запрос по таблице responses
+        responses_rows = await conn.fetch("SELECT response, category FROM responses")
+
+        # Проверьте содержимое результатов
+        print("Keywords rows:", keywords_rows)
+        print("Responses rows:", responses_rows)
+
+        # Основной результат
         results = {
             'bmw': [],
             'mamka': [],
@@ -94,7 +103,7 @@ async def fetch_all_keywords_and_responses(conn):
             'politics_response': []
         }
 
-        for value, category in rows:
+        for value, category in keywords_rows + responses_rows:
             if category in results:
                 results[category].append(value)
 
@@ -469,14 +478,14 @@ async def handle_bot_reply(message: types.Message):
             original_message = "Пересланное сообщение без текста."  # Сообщение для пользователя, если текст отсутствует
     user_reply = message.text
     
-    # if len(cleaned_message_text) > 14  and '?' not in cleaned_message_text:
+
     try:
         embedding = generate_embedding(cleaned_message_text)
         similar_messages = await find_similar_messages(embedding, threshold=0.8)
         if similar_messages:
-                similar_info = "\n".join([f"Похожее сообщение: {msg[0]} (сходство: {msg[1]:.2f})" for msg in similar_messages])
+                similar_info = "\n".join([f"схожа інформація є у базі даних: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
         else:
-            similar_info = "Похожих сообщений не найдено."
+            similar_info = "Схожих повідомленнь не знайдено."
         if len(cleaned_message_text) > 14  and '?' not in cleaned_message_text:
             await save_embedding(cleaned_message_text,embedding)
         else:
@@ -529,7 +538,7 @@ async def random_message(message: Message):
     elif any(keyword in cleaned_text for keyword in mamka):
         logging.info("mamka handler triggered.")
         await message.answer('намагаюсь пожартувати')
-        await message.answer(random.choice(mamka))
+        await message.answer(random.choice(mamka_response))
 
     # zrada
     elif any(keyword in cleaned_text for keyword in zrada):
@@ -646,9 +655,9 @@ async def random_message(message: Message):
             embedding = generate_embedding(cleaned_message_text)
             similar_messages = await find_similar_messages(embedding, threshold=0.8)
             if similar_messages:
-                similar_info = "\n".join([f"Похожее сообщение: {msg[0]} (сходство: {msg[1]:.2f})" for msg in similar_messages])
+                similar_info = "\n".join([f"схожа інформація є у базі даних: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
             else:
-                similar_info = "Похожих сообщений не найдено."
+                similar_info = "Схожих повідомленнь не знайдено"
             if len(cleaned_message_text) > 14  and '?' not in cleaned_message_text:
                 await save_embedding(cleaned_message_text,embedding)
             else:
