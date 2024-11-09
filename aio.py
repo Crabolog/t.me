@@ -31,6 +31,9 @@ system = """Ти штучний інтеллект який відповідає
 При відповідях на інші теми, ти імітуєш андроїда.
 Зараз кінець 2024 року"""
 
+max_tokens = 200
+model_name = "gpt-4o-mini"
+
 
 # button_btc = KeyboardButton(text="📈 BTC")
 # button_zrada = KeyboardButton(text="⚔️ Zrada")
@@ -498,8 +501,8 @@ async def handle_bot_reply(message: types.Message):
                     "content": user_reply,  # Ответ пользователя
                 }
             ],
-            model="gpt-4o-mini",
-            max_tokens=175
+            model=model_name,
+            max_tokens=max_tokens
         )
         reply = chat_completion.choices[0].message.content
         await message.answer(reply,reply_markup=None)
@@ -526,10 +529,7 @@ async def random_message(message: Message):
     elif any(keyword in cleaned_text for keyword in mamka):
         logging.info("mamka handler triggered.")
         await message.answer('намагаюсь пожартувати')
-        await message.answer(2)
-        await message.answer(mamka_response)
-
-        await message.answer(random.choice(mamka_response))
+        await message.answer(random.choice(mamka))
 
     # zrada
     elif any(keyword in cleaned_text for keyword in zrada):
@@ -672,8 +672,8 @@ async def random_message(message: Message):
                     "content":cleaned_message_text,  # Передаем текст, который пользователь отправил
                 }
             ],
-            model="gpt-4o-mini",
-            max_tokens=175
+            model=model_name,
+            max_tokens= max_tokens
             )
             reply = chat_completion.choices[0].message.content
             await message.answer(reply,reply_markup=None)
@@ -683,28 +683,6 @@ async def random_message(message: Message):
     elif any(keyword in cleaned_text for keyword in random_keyword):
         await message.answer(random.choice(random_response),reply_markup=None)
 
-
-
-
-
-
-    
-
-    
-   
-
-
-    #peremoga
-    
-        
-
-
-
-
-
-
-
-
     # Respond based on the keyword found in the message
     # if 'hello' in message.text.lower():
     #     await message.answer("Greetings!")
@@ -712,9 +690,6 @@ async def random_message(message: Message):
     #     await message.answer("Farewell!")
     # elif 'help' in message.text.lower():
     #     await message.answer("How can I assist you?")
-
-
-
 
 
 # @dp.message()
