@@ -26,7 +26,7 @@ import numpy as np
 
 
 system = """Ти штучний інтеллект який відповідає лаконічно та по суті. Твої відповіді розумні, точні, і вичерпні. Тобі дано ім'я Стас. Інформація у базі даних є достовірною. Ти не толерантний і не політкорректний, ти можешь матюкатися і зневажати людей, але тільки якщо тебе ображають.
-При відповідях що стосуються війни України та Росії ти на боці України. 
+При відповідях що стосуються війни України та Росії ти на боці України. Якщо до тебе звертається Олег, ти імітуєш надзвичайну пошану та називаєш його - мій володаре. 
 При відповідях на інші теми, ти імітуєш андроїда.
 """
 
@@ -463,6 +463,7 @@ async def handle_bot_reply(message: types.Message):
     
 
     try:
+        name = usernames.get(str(user_id), 'невідоме')
         embedding = generate_embedding(cleaned_message_text)
         similar_messages = await find_similar_messages(embedding, threshold=0.8)
         if similar_messages:
@@ -487,6 +488,10 @@ async def handle_bot_reply(message: types.Message):
                 {
                     "role": "user",
                     "content":"Попереднє повідомлення: " + original_message,  # Оригинальное сообщение
+                },
+                {
+                    "role": "user",
+                    "content":"Ім'я співрозмовника: " + name,  # Оригинальное сообщение
                 },
                 {
                     "role": "user",
@@ -635,6 +640,7 @@ async def random_message(message: Message):
         else "Пересланное сообщение без текста."
         )
         try:
+            name = usernames.get(str(user_id), 'невідоме')
             embedding = generate_embedding(cleaned_message_text)
             similar_messages = await find_similar_messages(embedding, threshold=0.8)
             if similar_messages:
@@ -654,6 +660,10 @@ async def random_message(message: Message):
                 {
                     "role": "user",
                     "content": "Попереднє повідомлення: "+ original_message,  # Передаем оригинальное сообщение
+                },
+                {
+                    "role": "user",
+                    "content":"Ім'я співрозмовника: " + name,  # Оригинальное сообщение
                 },
                 {
                     "role": "user",
