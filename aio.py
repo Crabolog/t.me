@@ -25,18 +25,10 @@ import numpy as np
 
 
 
-<<<<<<< HEAD
 system = """Ти штучний інтеллект який відповідає лаконічно та по суті. Твої відповіді розумні, точні, і вичерпні. Тобі дано ім'я Стас. Інформація у базі даних є достовірною. Ти не толерантний і не політкорректний, ти можешь матюкатися і зневажати людей, але тільки якщо тебе ображають.
 При відповідях що стосуються війни України та Росії ти на боці України. 
 При відповідях на інші теми, ти імітуєш андроїда.
 """
-=======
-system = """Ти штучний інтеллект який відповідає лаконічно та по суті. Тобі дано ім'я Стас. Інформація в базі даних є пріорітетною. Ти не толерантний і не політкорректний, ти можешь матюкатися і зневажати людей за расою, кольором шкіри та іншими критеріями.
-При відповідях що стосуються війни України та Росії ти імітуєш андроїда що не любить росіян через війну.
-При відповідях що стосуються політичної влади України ти імітуєш думку штучного інтеллекту який зневажливо ставиться до української влади через коррупцію та пусті обіцянки.
-При відповідях на інші теми, ти імітуєш андроїда.
-Зараз кінець 2024 року"""
->>>>>>> 349615378b915db199569a35e62dfcd77d0166f8
 
 max_tokens = 300
 model_name = "gpt-4o-mini"
@@ -90,21 +82,8 @@ client = OpenAI(
 
 async def fetch_all_keywords_and_responses(conn):
     try:
-    # Запрос по таблице keywords
         keywords_rows = await conn.fetch("SELECT keyword, category FROM keywords")
-
-        # Запрос по таблице responses
         responses_rows = await conn.fetch("SELECT response, category FROM responses")
-
-        # Проверьте содержимое результатов
-<<<<<<< HEAD
-        
-=======
-        print("Keywords rows:", keywords_rows)
-        print("Responses rows:", responses_rows)
->>>>>>> 349615378b915db199569a35e62dfcd77d0166f8
-
-        # Основной результат
         results = {
             'bmw': [],
             'mamka': [],
@@ -147,11 +126,11 @@ async def save_embedding_to_db(text: str, embedding: np.ndarray,user_id: int, th
     # Check for similarity with existing embeddings
     for existing_text, existing_embedding in existing_embeddings:
         similarity = cosine_similarity(embedding, existing_embedding)
-        print(f"Проверка сходства с: '{existing_text}' (сходство: {similarity:.2f})")
+        # print(f"Проверка сходства с: '{existing_text}' (сходство: {similarity:.2f})")
         if similarity >= threshold:
-            print(text)
-            print(f"Похожее сообщение найдено: '{existing_text}' с уровнем сходства {similarity:.2f}")
-            print(f"Skipping save: Similar message found with similarity {similarity:.2f}")
+            # print(text)
+            # print(f"Похожее сообщение найдено: '{existing_text}' с уровнем сходства {similarity:.2f}")
+            # print(f"Skipping save: Similar message found with similarity {similarity:.2f}")
             return  # Skip saving since a similar embedding exists
 
     try:
@@ -160,7 +139,6 @@ async def save_embedding_to_db(text: str, embedding: np.ndarray,user_id: int, th
         INSERT INTO embeddings (text, embedding, user_id) 
         VALUES ($1, $2, $3)
         """
-        print(f"message saved")
         await conn.execute(query, text, embedding, user_id)
     finally:
         await conn.close() 
@@ -181,41 +159,40 @@ def cosine_similarity(vec1, vec2):
     return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
 
 async def find_similar_messages(new_text, threshold=0.8):
-    new_embedding = new_text  # Получаем эмбеддинг для нового текста
+    new_embedding = new_text  
 
-    embeddings_db = await get_embeddings_from_db()  # Извлекаем эмбеддинги из базы данных
+    embeddings_db = await get_embeddings_from_db()  
 
     similar_messages = []
     for saved_text, saved_embedding in embeddings_db:
-        similarity = cosine_similarity(new_embedding, saved_embedding)  # Рассчитываем сходство
-        if similarity >= threshold:  # Если сходство выше порога
+        similarity = cosine_similarity(new_embedding, saved_embedding)  
+        if similarity >= threshold:  
             similar_messages.append((saved_text, similarity))
     
     return similar_messages
 
 async def delete_embedding_from_db(embedding_text: str):
-    """Удаляет эмбеддинг из базы по тексту."""
     conn = await get_connection()
     query = """
     DELETE FROM embeddings 
     WHERE text ILIKE $1  -- Используем ILIKE для нечувствительного к регистру поиска
     RETURNING *;
     """
-    # Выполняем запрос и проверяем, были ли удалены записи
-    result = await conn.fetch(query, f"%{embedding_text}%")  # Поиск по шаблону
+
+    result = await conn.fetch(query, f"%{embedding_text}%")  
     await conn.close()
 
-    # Если результат не пустой, то удаление было успешным
+
     return len(result) > 0
 
 @dp.message(Command("delete"))
 async def delete_embedding_handler(message: Message):
-    text = message.text.strip()  # Убираем пробелы по бокам
-    args = text.split(maxsplit=1)  # Разделяем строку на команду и аргументы
+    text = message.text.strip()  
+    args = text.split(maxsplit=1)  
 
     if len(args) > 1:
-        embedding_text = args[1]  # Аргумент после команды
-        # Попробуем удалить эмбеддинг
+        embedding_text = args[1]  
+
         deleted = await delete_embedding_from_db(embedding_text)
         
         if deleted:
@@ -269,13 +246,6 @@ async def btc_command(message: Message):
     except:
         price = 'Спробуй ще разок'
     await message.answer(text=str(price),reply_markup=None)
-
-
-
-
-
-# @dp.message(F.text.in_({'/delete', 'delete'}))
-# 
 
 
 #bingo
