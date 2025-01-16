@@ -185,6 +185,39 @@ async def delete_embedding_from_db(embedding_text: str):
 
     return len(result) > 0
 
+@dp.message(lambda message: message.text.lower() in {'level', 'level@zradalevelsbot', '/level'})
+async def handle_level_message(message: types.Message):
+    await message.reply(f"Я заметил сообщение с ключевым словом: {message.text}")
+
+# Логирование всех сообщений для проверки
+# @dp.message()
+# async def log_all_messages(message: types.Message):
+#     # Логируем все сообщения
+#     print(f"Получено сообщение от {message.from_user.username}: {message.text}")
+    
+#     # Если сообщение является ответом на ваше сообщение
+#     if message.reply_to_message:
+#         print(f"Это сообщение ответ на: {message.reply_to_message.text}")
+    
+#     # Логируем информацию о сообщении
+#     if message.from_user.is_bot:
+#         print(f"Сообщение отправлено ботом: {message.from_user.username}")
+#     else:
+#         print(f"Сообщение отправлено пользователем: {message.from_user.username}")
+
+# # Обработчик сообщений от других ботов в группе, отвечающих на ваши сообщения
+# @dp.message(lambda message: message.from_user.is_bot and message.chat.type in ['group', 'supergroup'] and message.reply_to_message)
+# async def handle_bot_reply(message: types.Message):
+#     # Проверяем, что сообщение от бота и оно является ответом на ваше сообщение
+#     if message.reply_to_message and message.reply_to_message.from_user.id == bot.id:
+#         # Логируем информацию о сообщении
+#         print(f"Ответ от другого бота: {message.text}")
+#         print(f"Ответ пришел от бота: {message.from_user.username}")
+#         print(f"Ответ на сообщение от моего бота: {message.reply_to_message.text}")
+        
+#         # Ответ на сообщение от другого бота
+#         await message.reply(f"Я заметил ответ от другого бота: {message.text}")
+
 @dp.message(Command("delete"))
 async def delete_embedding_handler(message: Message):
     text = message.text.strip()  
@@ -422,11 +455,7 @@ async def peremoga_command(message: Message):
                 f'Рiвень перемоги виріс.'
             ),reply_markup=None)
 
-@dp.message(content_types=types.ContentTypes.TEXT)
-async def handle_message(message: types.Message):
-    if message.chat.type == "supergroup":  # Проверка, что сообщение пришло из супер-группы
-        if message.from_user.is_bot:  # Если сообщение от другого бота
-            await message.reply("Тест")
+
 
 
 # @dp.message(F.text.in_({'ало','ало'}))
