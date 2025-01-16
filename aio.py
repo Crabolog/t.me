@@ -681,6 +681,50 @@ async def random_message(message: Message):
             await message.answer(reply,reply_markup=None)
         except Exception as e:
             await message.answer(f"Произошла ошибка: {e}")
+    
+
+    elif 'йобана блядь русня'  in cleaned_text:
+        user_id = message.from_user.id if message.from_user.id else 0
+      
+        cleaned_message_text = re.sub(r'\bстас\b', '', message.text, flags=re.IGNORECASE).strip()
+        cleaned_message_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!,]", "", cleaned_message_text.lower()).strip()
+        original_message = (
+        "Ти відповідаєш боту."
+        )
+        trigger = random.randint(0, 100)
+        if trigger >= 50:
+             original_message = ("Ти відповідаєш боту. У твоїй відповіді має бути слово з літерою 'ъ' або 'ы' або 'ё'. ")
+        elif trigger < 50:
+            original_message = ("Ти відповідаєш боту.")
+
+        try:
+            name = usernames.get(str(user_id), 'невідоме')
+            chat_completion = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system", 
+                    "content": system
+                },
+                {
+                    "role": "user",
+                    "content": "Попереднє повідомлення: "+ original_message,  # Передаем оригинальное сообщение
+                },
+                {
+                    "role": "user",
+                    "content":"Ім'я співрозмовника: " + name,  
+                },
+                {
+                    "role": "user",
+                    "content":cleaned_message_text,  # Передаем текст, который пользователь отправил
+                }
+            ],
+            model=model_name,
+            max_tokens= max_tokens
+            )
+            reply = chat_completion.choices[0].message.content
+            await message.answer(reply,reply_markup=None)
+        except Exception as e:
+            await message.answer(f"Произошла ошибка: {e}")
         
     elif any(keyword in cleaned_text for keyword in random_keyword):
         await message.answer(random.choice(random_response),reply_markup=None)
