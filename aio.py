@@ -422,6 +422,13 @@ async def peremoga_command(message: Message):
                 f'Рiвень перемоги виріс.'
             ),reply_markup=None)
 
+@dp.message(content_types=types.ContentTypes.TEXT)
+async def handle_message(message: types.Message):
+    if message.chat.type == "supergroup":  # Проверка, что сообщение пришло из супер-группы
+        if message.from_user.is_bot:  # Если сообщение от другого бота
+            await message.reply("Тест")
+
+
 # @dp.message(F.text.in_({'ало','ало'}))
 # async def openai_command(message: Message):
 #     try:
@@ -729,11 +736,6 @@ async def random_message(message: Message):
     elif any(keyword in cleaned_text for keyword in random_keyword):
         await message.answer(random.choice(random_response),reply_markup=None)
     
-@dp.message_handler(content_types=types.ContentTypes.TEXT)
-async def handle_message(message: types.Message):
-    if message.chat.type == "supergroup":  # Проверка, что сообщение пришло из супер-группы
-        if message.from_user.is_bot:  # Если сообщение от другого бота
-            await message.reply("Тест")
 
     # Respond based on the keyword found in the message
     # if 'hello' in message.text.lower():
