@@ -675,8 +675,13 @@ async def random_message(message: Message):
         message.reply_to_message.text if message.reply_to_message and message.reply_to_message.text 
         else "Пересланное сообщение без текста."
         )
+        original_userid =  (message.reply_to_message.from_user.id if message.reply_to_message.from_user.id
+        else 0
+        )
+        original_user_id = original_userid if original_userid else 0
         try:
             name = usernames.get(str(user_id), 'невідоме')
+            original_name = usernames.get(str(original_user_id), 'невідоме')
             embedding = generate_embedding(cleaned_message_text)
             similar_messages = await find_similar_messages(embedding, threshold=0.8)
             if similar_messages:
@@ -700,6 +705,10 @@ async def random_message(message: Message):
                 {
                     "role": "user",
                     "content":"Ім'я співрозмовника: " + name,  # Оригинальное сообщение
+                },
+                {
+                    "role": "user",
+                    "content":"Ім'я автора попереднього повідомлення: " + original_name,  # Оригинальное сообщение
                 },
                 {
                     "role": "user",
