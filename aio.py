@@ -675,9 +675,10 @@ async def random_message(message: Message):
         message.reply_to_message.text if message.reply_to_message and message.reply_to_message.text 
         else "Пересланное сообщение без текста."
         )
-        original_userid =  (message.reply_to_message.from_user.id if message.reply_to_message.from_user.id
-        else 0
+        original_userid = (
+        message.reply_to_message.from_user.id if message.reply_to_message and message.reply_to_message.from_user else 0
         )
+
         original_user_id = original_userid if original_userid else 0
         try:
             name = usernames.get(str(user_id), 'невідоме')
