@@ -21,6 +21,7 @@ from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 import numpy as np
+from bs4 import BeautifulSoup
 
 
 
@@ -184,6 +185,71 @@ async def delete_embedding_from_db(embedding_text: str):
 
 
     return len(result) > 0
+
+
+# async def search_bing(query: str, bing_api: str, mkt: str = 'uk-RU') -> dict:
+#     endpoint = 'https://api.bing.microsoft.com/v7.0/search'
+#     params = {'q': query, 'mkt': mkt}
+#     headers = {'Ocp-Apim-Subscription-Key': bing_api}
+
+#     async with aiohttp.ClientSession() as session:
+#         async with session.get(endpoint, params=params, headers=headers) as response:
+#             if response.status == 200:
+#                 return await response.json()
+#             else:
+#                 return {'error': f"Request failed with status code {response.status}"}
+
+
+
+
+#<<<<<<<<<<<<<<<<<<<<<<SEARCH BING>>>>>>>>>>>>>>>>>>>>
+async def search_and_extract(query: str, bing_api: str, mkt: str = 'uk-UA', num_results: int = 5) -> str:
+
+    endpoint = "https://api.bing.microsoft.com/v7.0/search"
+    params = {
+        'q': query,      
+        'mkt': mkt,      
+        'count': num_results  
+    }
+    headers = {
+        'Ocp-Apim-Subscription-Key': bing_api  # Ключ Bing API
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(endpoint, params=params, headers=headers) as response:
+            if response.status != 200:
+                return f"Помилка Bing API: Код {response.status}"
+            
+            results = await response.json()
+
+        if 'webPages' not in results or 'value' not in results['webPages']:
+            return "Результатів не знайдено"
+
+        formatted_results = []
+        for item in results['webPages']['value'][:num_results]:
+            name = item.get('name', 'Без назви')
+            url = item.get('url', 'Без URL')
+            snippet = item.get('snippet', 'Опис відсутній')
+
+            try:
+                async with session.get(url, timeout=10) as page_response:
+                    if page_response.status == 200:
+                        html = await page_response.text()
+                        soup = BeautifulSoup(html, 'html.parser')
+                        paragraphs = soup.find_all('p')
+                        main_text = "\n".join([p.get_text(strip=True) for p in paragraphs])[:750]
+                    else:
+                        main_text = f"Помилка сторінки: Код {page_response.status}"
+            except Exception as e:
+                main_text = f"Помилка: {e}"
+
+            formatted_results.append(
+                f"Назва: {name}\nURL: {url}\nОпис: {snippet}\nТекст:\n{main_text}\n"
+            )
+        # print("\n".join(formatted_results))  
+        return "\n".join(formatted_results)
+
+      
 
 @dp.message(lambda message: message.text.lower() in {'level', 'level@zradalevelsbot', '/level'})
 async def handle_level_message(message: types.Message):
@@ -496,53 +562,107 @@ async def handle_bot_reply(message: types.Message):
         else:
             original_message = "Пересланное сообщение без текста."  # Сообщение для пользователя, если текст отсутствует
     user_reply = message.text
-    
 
-    try:
-        name = usernames.get(str(user_id), 'невідоме')
-        embedding = generate_embedding(cleaned_message_text)
-        similar_messages = await find_similar_messages(embedding, threshold=0.8)
-        if similar_messages:
-                similar_info = "\n".join([f"схожа інформація є у базі даних: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
-        else:
-            similar_info = "Схожих повідомленнь не знайдено."
-        if len(cleaned_message_text) > 14  and '?' not in cleaned_message_text:
-            await save_embedding(cleaned_message_text,embedding,user_id)
-        else:
-            pass
-        chat_completion = await asyncio.to_thread(
-            client.chat.completions.create,
-            messages=[
-                {
-                    "role": "system", 
-                    "content": system
-                },
-                {
-                    "role": "user",
-                    "content": similar_info,  # Передаем информацию о похожих сообщениях
-                },
-                {
-                    "role": "user",
-                    "content":"Попереднє повідомлення: " + original_message,  # Оригинальное сообщение
-                },
-                {
-                    "role": "user",
-                    "content":"Ім'я співрозмовника: " + name,  # Оригинальное сообщение
-                },
-                {
-                    "role": "user",
-                    "content": user_reply,  # Ответ пользователя
-                }
-            ],
-            model=model_name,
-            max_tokens=max_tokens
-        )
-        reply = chat_completion.choices[0].message.content
-        await message.answer(reply,reply_markup=None)
-    except Exception as e:
-        await message.answer(f"Произошла ошибка: {e}",reply_markup=None)
-    
-    
+    keywords = ['поиск', 'пошук', 'бістра', 'найди', 'ищи', 'погугли', 'загугли', 'гугл']
+        
+    if any(keyword in cleaned_message_text for keyword in keywords):
+        query = re.sub(r'\b(стас|поиск)\b', '', message.text, flags=re.IGNORECASE).strip()
+        result = await search_and_extract(query, bing_api)  
+
+        try:
+            name = usernames.get(str(user_id), 'невідоме')
+            embedding = generate_embedding(cleaned_message_text)
+            similar_messages = await find_similar_messages(embedding, threshold=0.8)
+            if similar_messages:
+                    similar_info = "\n".join([f"схожа інформація є у базі даних: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
+            else:
+                similar_info = "Схожих повідомленнь не знайдено."
+            if len(cleaned_message_text) > 12  and '?' not in cleaned_message_text:
+                await save_embedding(cleaned_message_text+ '\n '+ result,embedding,user_id)
+            else:
+                pass
+            chat_completion = await asyncio.to_thread(
+                client.chat.completions.create,
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": system
+                    },
+                    {
+                        "role": "user",
+                        "content": similar_info,  # Передаем информацию о похожих сообщениях
+                    },
+                    {
+                        "role": "user",
+                        "content":"Попереднє повідомлення: " + original_message,  # Оригинальное сообщение
+                    },
+                    {
+                        "role": "user",
+                        "content":"Ім'я співрозмовника: " + name,  # Оригинальное сообщение
+                    },
+                    {
+                        "role": "user",
+                        "content": "Результат пошуку в мережі:" + "\n "+ result ,  # Передаем информацию о похожих сообщениях
+                    },
+                    {
+                        "role": "user",
+                        "content": user_reply,  # Ответ пользователя
+                    }
+                ],
+                model=model_name,
+                max_tokens=max_tokens
+            )
+            reply = chat_completion.choices[0].message.content
+            await message.answer(reply,reply_markup=None)
+        except Exception as e:
+            await message.answer(f"Произошла ошибка: {e}",reply_markup=None)
+
+    else:
+        try:
+            name = usernames.get(str(user_id), 'невідоме')
+            embedding = generate_embedding(cleaned_message_text)
+            similar_messages = await find_similar_messages(embedding, threshold=0.8)
+            if similar_messages:
+                    similar_info = "\n".join([f"схожа інформація є у базі даних: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
+            else:
+                similar_info = "Схожих повідомленнь не знайдено."
+            if len(cleaned_message_text) > 14  and '?' not in cleaned_message_text:
+                await save_embedding(cleaned_message_text,embedding,user_id)
+            else:
+                pass
+            chat_completion = await asyncio.to_thread(
+                client.chat.completions.create,
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": system
+                    },
+                    {
+                        "role": "user",
+                        "content": similar_info,  # Передаем информацию о похожих сообщениях
+                    },
+                    {
+                        "role": "user",
+                        "content":"Попереднє повідомлення: " + original_message,  # Оригинальное сообщение
+                    },
+                    {
+                        "role": "user",
+                        "content":"Ім'я співрозмовника: " + name,  # Оригинальное сообщение
+                    },
+                    {
+                        "role": "user",
+                        "content": user_reply,  # Ответ пользователя
+                    }
+                ],
+                model=model_name,
+                max_tokens=max_tokens
+            )
+            reply = chat_completion.choices[0].message.content
+            await message.answer(reply,reply_markup=None)
+        except Exception as e:
+            await message.answer(f"Произошла ошибка: {e}",reply_markup=None)
+
+
 
 
 
@@ -666,7 +786,7 @@ async def random_message(message: Message):
             except Exception as e:
                 await message.answer(text='Спробуй ще: ' + str(e),reply_markup=None)
 
-    elif 'стас'  in cleaned_text:
+    elif 'стас' in cleaned_text:
         user_id = message.from_user.id if message.from_user.id else 0
       
         cleaned_message_text = re.sub(r'\bстас\b', '', message.text, flags=re.IGNORECASE).strip()
@@ -680,53 +800,112 @@ async def random_message(message: Message):
         )
 
         original_user_id = original_userid if original_userid else 0
-        try:
-            name = usernames.get(str(user_id), 'невідоме')
-            original_name = usernames.get(str(original_user_id), 'невідоме')
-            embedding = generate_embedding(cleaned_message_text)
-            similar_messages = await find_similar_messages(embedding, threshold=0.8)
-            if similar_messages:
-                similar_info = "\n".join([f"схожа інформація є у базі даних: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
-            else:
-                similar_info = "Схожих повідомленнь не знайдено"
-            if len(cleaned_message_text) > 14  and '?' not in cleaned_message_text:
-                await save_embedding(cleaned_message_text,embedding,user_id)
-            else:
-                pass
-            chat_completion = client.chat.completions.create(
-            messages=[
-                {
-                    "role": "system", 
-                    "content": system
-                },
-                {
-                    "role": "user",
-                    "content": "Попереднє повідомлення: "+ original_message,  # Передаем оригинальное сообщение
-                },
-                {
-                    "role": "user",
-                    "content":"Ім'я співрозмовника: " + name,  # Оригинальное сообщение
-                },
-                {
-                    "role": "user",
-                    "content":"Ім'я автора попереднього повідомлення: " + original_name,  # Оригинальное сообщение
-                },
-                {
-                    "role": "user",
-                    "content": similar_info,  # Передаем информацию о похожих сообщениях
-                },
-                {
-                    "role": "user",
-                    "content":cleaned_message_text,  # Передаем текст, который пользователь отправил
-                }
-            ],
-            model=model_name,
-            max_tokens= max_tokens
-            )
-            reply = chat_completion.choices[0].message.content
-            await message.answer(reply,reply_markup=None)
-        except Exception as e:
-            await message.answer(f"Произошла ошибка: {e}")
+        keywords = ['поиск', 'пошук', 'бістра', 'найди', 'ищи', 'погугли', 'загугли', 'гугл']
+
+        if any(keyword in cleaned_text for keyword in keywords):
+            query = re.sub(r'\b(стас|поиск)\b', '', message.text, flags=re.IGNORECASE).strip()
+            result = await search_and_extract(query, bing_api)
+            try:
+                name = usernames.get(str(user_id), 'невідоме')
+                original_name = usernames.get(str(original_user_id), 'невідоме')
+                embedding = generate_embedding(cleaned_message_text)
+                similar_messages = await find_similar_messages(embedding, threshold=0.8)
+                if similar_messages:
+                    similar_info = "\n".join([f"схожа інформація є у базі даних: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
+                else:
+                    similar_info = "Схожих повідомленнь не знайдено"
+                if len(cleaned_message_text) > 12  and '?' not in cleaned_message_text:
+                    await save_embedding(cleaned_message_text+ '\n '+ result,embedding,user_id)
+                else:
+                    pass
+                chat_completion = client.chat.completions.create(
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": system
+                    },
+                    {
+                        "role": "user",
+                        "content": "Попереднє повідомлення: "+ original_message,  # Передаем оригинальное сообщение
+                    },
+                    {
+                        "role": "user",
+                        "content":"Ім'я співрозмовника: " + name,  # Оригинальное сообщение
+                    },
+                    {
+                        "role": "user",
+                        "content":"Ім'я автора попереднього повідомлення: " + original_name,  # Оригинальное сообщение
+                    },
+                    {
+                        "role": "user",
+                        "content": similar_info,  # Передаем информацию о похожих сообщениях
+                    },
+                    {
+                        "role": "user",
+                        "content": "Результат пошуку в мережі:" + "\n "+ result ,  # Передаем информацию о похожих сообщениях
+                    },
+                    {
+                        "role": "user",
+                        "content":cleaned_message_text,  # Передаем текст, который пользователь отправил
+                    }
+                ],
+                model=model_name,
+                max_tokens= max_tokens
+                )
+                reply = chat_completion.choices[0].message.content
+                await message.answer(reply,reply_markup=None)
+            except Exception as e:
+                await message.answer(f"Произошла ошибка: {e}")
+
+        else:
+            try:
+                name = usernames.get(str(user_id), 'невідоме')
+                original_name = usernames.get(str(original_user_id), 'невідоме')
+                embedding = generate_embedding(cleaned_message_text)
+                similar_messages = await find_similar_messages(embedding, threshold=0.8)
+                if similar_messages:
+                    similar_info = "\n".join([f"схожа інформація є у базі даних: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
+                else:
+                    similar_info = "Схожих повідомленнь не знайдено"
+                if len(cleaned_message_text) > 12  and '?' not in cleaned_message_text:
+                    await save_embedding(cleaned_message_text,embedding,user_id)
+                else:
+                    pass
+                chat_completion = client.chat.completions.create(
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": system
+                    },
+                    {
+                        "role": "user",
+                        "content": "Попереднє повідомлення: "+ original_message,  # Передаем оригинальное сообщение
+                    },
+                    {
+                        "role": "user",
+                        "content":"Ім'я співрозмовника: " + name,  # Оригинальное сообщение
+                    },
+                    {
+                        "role": "user",
+                        "content":"Ім'я автора попереднього повідомлення: " + original_name,  # Оригинальное сообщение
+                    },
+                    {
+                        "role": "user",
+                        "content": similar_info,  # Передаем информацию о похожих сообщениях
+                    },
+                    
+                    {
+                        "role": "user",
+                        "content":cleaned_message_text,  # Передаем текст, который пользователь отправил
+                    }
+                ],
+                model=model_name,
+                max_tokens= max_tokens
+                )
+                reply = chat_completion.choices[0].message.content
+                await message.answer(reply,reply_markup=None)
+            except Exception as e:
+                await message.answer(f"Произошла ошибка: {e}")
     
 
     elif 'йобана блядь русня'  in cleaned_text:
