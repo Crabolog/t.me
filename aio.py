@@ -26,13 +26,13 @@ from bs4 import BeautifulSoup
 
 
 
-system = """Ти штучний інтеллект який відповідає лаконічно та по суті. Твої відповіді розумні, точні, і вичерпні. Тобі дано ім'я Стас. Інформація у базі даних є достовірною. Ти не толерантний і не політкорректний, ти можешь матюкатися і зневажати людей, але тільки якщо тебе ображають.
+system = """Ти штучний інтеллект який відповідає по суті. Твої відповіді розумні, точні, іноді з гумором. Тобі дано ім'я Стас. Ти не толерантний і не політкорректний, ти можешь матюкатися і зневажати людей, але тільки якщо тебе ображають. 
 При відповідях що стосуються війни України та Росії ти на боці України. Якщо до тебе звертається Олег, ти імітуєш надзвичайну пошану та називаєш його - мій володарю. 
-При відповідях на інші теми, ти імітуєш андроїда.
 """
 
-max_tokens = 300
+max_tokens = 750
 model_name = "gpt-4o-mini"
+search_keywords = ['поиск', 'пошук', 'бістра', 'найди', 'ищи', 'погугли', 'загугли', 'гугл', 'пошукай', 'шукай']
 
 
 # button_btc = KeyboardButton(text="📈 BTC")
@@ -65,21 +65,9 @@ conn.autocommit = True
 cursor = conn.cursor()
 openai.api_key = OPENAI_API_KEY
 client = OpenAI(
-    # This is the default and can be omitted
     api_key=OPENAI_API_KEY
 )
 
-# @dp.message(CommandStart())
-# async def command_start_handler(message: Message) -> None:
-#     """
-#     This handler receives messages with `/start` command
-#     """
-#     # Most event objects have aliases for API methods that can be called in events' context
-#     # For example if you want to answer to incoming message you can use `message.answer(...)` alias
-#     # and the target chat will be passed to :ref:`aiogram.methods.send_message.SendMessage`
-#     # method automatically or call API method directly via
-#     # Bot instance: `bot.send_message(chat_id=message.chat.id, ...)`
-#     await message.answer(f"Hello, {html.bold(message.from_user.full_name)}!")
 
 async def fetch_all_keywords_and_responses(conn):
     try:
@@ -110,13 +98,12 @@ async def fetch_all_keywords_and_responses(conn):
         await conn.close()
 
 def generate_embedding(text: str):
-    # Synchronous call to OpenAI API to generate embedding
     response = openai.embeddings.create(
         model="text-embedding-ada-002",
         input=text
     )
     
-    embedding = response.data[0].embedding  # Access the 'embedding' field
+    embedding = response.data[0].embedding 
     return embedding
 
 
@@ -127,11 +114,7 @@ async def save_embedding_to_db(text: str, embedding: np.ndarray,user_id: int, th
     # Check for similarity with existing embeddings
     for existing_text, existing_embedding in existing_embeddings:
         similarity = cosine_similarity(embedding, existing_embedding)
-        # print(f"Проверка сходства с: '{existing_text}' (сходство: {similarity:.2f})")
         if similarity >= threshold:
-            # print(text)
-            # print(f"Похожее сообщение найдено: '{existing_text}' с уровнем сходства {similarity:.2f}")
-            # print(f"Skipping save: Similar message found with similarity {similarity:.2f}")
             return  # Skip saving since a similar embedding exists
 
     try:
@@ -176,7 +159,7 @@ async def delete_embedding_from_db(embedding_text: str):
     conn = await get_connection()
     query = """
     DELETE FROM embeddings 
-    WHERE text ILIKE $1  -- Используем ILIKE для нечувствительного к регистру поиска
+    WHERE text ILIKE $1  
     RETURNING *;
     """
 
@@ -522,32 +505,6 @@ async def peremoga_command(message: Message):
             ),reply_markup=None)
 
 
-
-
-# @dp.message(F.text.in_({'ало','ало'}))
-# async def openai_command(message: Message):
-#     try:
-#         chat_completion = client.chat.completions.create(
-#         messages=[
-#         {
-#             "role": "user",
-#             "content": message.text,
-#         }
-#         ],
-#         model="gpt-3.5-turbo",
-#         )
-#         print(chat_completion)
-
-#         reply = chat_completion.choices[0].message.content
-        
-#         await message.answer(reply)
-    
-#     except Exception as e:
-#         print(chat_completion)
-#         if "429" in str(e):
-#             await message.answer("Слишком много запросов. Пожалуйста, попробуйте позже.")
-#         else:
-#             await message.answer(f"Произошла ошибка: {e}")
         
 @dp.message(lambda message: message.reply_to_message and message.reply_to_message.from_user.id == 6694398809)
 async def handle_bot_reply(message: types.Message):
@@ -558,14 +515,12 @@ async def handle_bot_reply(message: types.Message):
     cleaned_message_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!,]", "", cleaned_message_text.lower()).strip()
     if not original_message and message.reply_to_message:
         if message.reply_to_message.caption:
-                original_message = message.reply_to_message.caption  # Используем заголовок медиа
+                original_message = message.reply_to_message.caption  
         else:
-            original_message = "Пересланное сообщение без текста."  # Сообщение для пользователя, если текст отсутствует
+            original_message = "Пересланное сообщение без текста."  
     user_reply = message.text
-
-    keywords = ['поиск', 'пошук', 'бістра', 'найди', 'ищи', 'погугли', 'загугли', 'гугл']
         
-    if any(keyword in cleaned_message_text for keyword in keywords):
+    if any(keyword in cleaned_message_text for keyword in search_keywords):
         query = re.sub(r'\b(стас|поиск)\b', '', message.text, flags=re.IGNORECASE).strip()
         result = await search_and_extract(query, bing_api)  
 
@@ -590,23 +545,23 @@ async def handle_bot_reply(message: types.Message):
                     },
                     {
                         "role": "user",
-                        "content": similar_info,  # Передаем информацию о похожих сообщениях
+                        "content": similar_info,  
                     },
                     {
                         "role": "user",
-                        "content":"Попереднє повідомлення: " + original_message,  # Оригинальное сообщение
+                        "content":"Попереднє повідомлення: " + original_message,  
                     },
                     {
                         "role": "user",
-                        "content":"Ім'я співрозмовника: " + name,  # Оригинальное сообщение
+                        "content":"Ім'я співрозмовника: " + name,  
                     },
                     {
                         "role": "user",
-                        "content": "Результат пошуку в мережі:" + "\n "+ result ,  # Передаем информацию о похожих сообщениях
+                        "content": "Результат пошуку в мережі:" + "\n "+ result ,  
                     },
                     {
                         "role": "user",
-                        "content": user_reply,  # Ответ пользователя
+                        "content": user_reply,  
                     }
                 ],
                 model=model_name,
@@ -639,19 +594,19 @@ async def handle_bot_reply(message: types.Message):
                     },
                     {
                         "role": "user",
-                        "content": similar_info,  # Передаем информацию о похожих сообщениях
+                        "content": similar_info,  
                     },
                     {
                         "role": "user",
-                        "content":"Попереднє повідомлення: " + original_message,  # Оригинальное сообщение
+                        "content":"Попереднє повідомлення: " + original_message,  
                     },
                     {
                         "role": "user",
-                        "content":"Ім'я співрозмовника: " + name,  # Оригинальное сообщение
+                        "content":"Ім'я співрозмовника: " + name,  
                     },
                     {
                         "role": "user",
-                        "content": user_reply,  # Ответ пользователя
+                        "content": user_reply,  
                     }
                 ],
                 model=model_name,
@@ -800,9 +755,8 @@ async def random_message(message: Message):
         )
 
         original_user_id = original_userid if original_userid else 0
-        keywords = ['поиск', 'пошук', 'бістра', 'найди', 'ищи', 'погугли', 'загугли', 'гугл']
 
-        if any(keyword in cleaned_text for keyword in keywords):
+        if any(keyword in cleaned_text for keyword in search_keywords):
             query = re.sub(r'\b(стас|поиск)\b', '', message.text, flags=re.IGNORECASE).strip()
             result = await search_and_extract(query, bing_api)
             try:
@@ -826,27 +780,27 @@ async def random_message(message: Message):
                     },
                     {
                         "role": "user",
-                        "content": "Попереднє повідомлення: "+ original_message,  # Передаем оригинальное сообщение
+                        "content": "Попереднє повідомлення: "+ original_message,  
                     },
                     {
                         "role": "user",
-                        "content":"Ім'я співрозмовника: " + name,  # Оригинальное сообщение
+                        "content":"Ім'я співрозмовника: " + name,  #
                     },
                     {
                         "role": "user",
-                        "content":"Ім'я автора попереднього повідомлення: " + original_name,  # Оригинальное сообщение
+                        "content":"Ім'я автора попереднього повідомлення: " + original_name,  #
                     },
                     {
                         "role": "user",
-                        "content": similar_info,  # Передаем информацию о похожих сообщениях
+                        "content": similar_info,  
                     },
                     {
                         "role": "user",
-                        "content": "Результат пошуку в мережі:" + "\n "+ result ,  # Передаем информацию о похожих сообщениях
+                        "content": "Результат пошуку в мережі:" + "\n "+ result , 
                     },
                     {
                         "role": "user",
-                        "content":cleaned_message_text,  # Передаем текст, который пользователь отправил
+                        "content":cleaned_message_text,  
                     }
                 ],
                 model=model_name,
@@ -879,24 +833,24 @@ async def random_message(message: Message):
                     },
                     {
                         "role": "user",
-                        "content": "Попереднє повідомлення: "+ original_message,  # Передаем оригинальное сообщение
+                        "content": "Попереднє повідомлення: "+ original_message,  
                     },
                     {
                         "role": "user",
-                        "content":"Ім'я співрозмовника: " + name,  # Оригинальное сообщение
+                        "content":"Ім'я співрозмовника: " + name,  
                     },
                     {
                         "role": "user",
-                        "content":"Ім'я автора попереднього повідомлення: " + original_name,  # Оригинальное сообщение
+                        "content":"Ім'я автора попереднього повідомлення: " + original_name,  
                     },
                     {
                         "role": "user",
-                        "content": similar_info,  # Передаем информацию о похожих сообщениях
+                        "content": similar_info,  
                     },
                     
                     {
                         "role": "user",
-                        "content":cleaned_message_text,  # Передаем текст, который пользователь отправил
+                        "content":cleaned_message_text,  
                     }
                 ],
                 model=model_name,
@@ -932,7 +886,7 @@ async def random_message(message: Message):
                 },
                 {
                     "role": "user",
-                    "content": "Попереднє повідомлення: "+ original_message,  # Передаем оригинальное сообщение
+                    "content": "Попереднє повідомлення: "+ original_message,  
                 },
                 {
                     "role": "user",
@@ -940,7 +894,7 @@ async def random_message(message: Message):
                 },
                 {
                     "role": "user",
-                    "content":cleaned_message_text,  # Передаем текст, который пользователь отправил
+                    "content":cleaned_message_text,  
                 }
             ],
             model=model_name,
