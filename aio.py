@@ -99,7 +99,7 @@ async def fetch_all_keywords_and_responses(conn):
 
 def generate_embedding(text: str):
     response = openai.embeddings.create(
-        model="text-embedding-3-small",
+        model="text-embedding-ada-002",
         input=text
     )
     
@@ -107,7 +107,7 @@ def generate_embedding(text: str):
     return embedding
 
 
-async def save_embedding_to_db(text: str, embedding: np.ndarray,user_id: int, threshold=0.9):
+async def save_embedding_to_db(text: str, embedding: np.ndarray,user_id: int, threshold=0.8):
     conn = await get_connection() 
     existing_embeddings = await get_embeddings_from_db()
 
@@ -152,6 +152,7 @@ async def find_similar_messages(new_text, threshold=0.8):
         similarity = cosine_similarity(new_embedding, saved_embedding)  
         if similarity >= threshold:  
             similar_messages.append((saved_text, similarity))
+            print(saved_text)
     
     return similar_messages
 
