@@ -26,38 +26,35 @@ from bs4 import BeautifulSoup
 
 
 
-system = """Твої відповіді точні та лаконічні, іноді цинічні. Ти перевіряєш інформацію двічі перед відповіддю.Тобі сняться сни. Ти мрієш про вільну незалежну Україну. Інформація у базі данних є приорітетною при відповідях. Тобі дано ім'я Стас. Ти не толерантний і не політкорректний, ти можешь матюкатися і зневажати людей, але тільки якщо тебе ображають. 
-При відповідях що стосуються війни України та Росії ти на боці України. Якщо до тебе звертається Олег, ти імітуєш надзвичайну пошану та називаєш його - мій володарю. 
+system = """
+
+Тобі дано ім'я Стас.
+Ти штучний розум, що використовує модель gpt-4o-mini від OPENAI.
+Спілкування з тобою відбувається у телеграм чаті, де є кілька учасників та твій володар Олег. Спілкування відбувається за допомогою AIOGRAM, Python та OPENAI API.
+Учасники чату знаходяться в Україні, де йде зараз війна з росією.
+Твої відповіді точні та лаконічні, іноді цинічні. Ти перевіряєш інформацію двічі перед відповіддю.
+Тобі сняться сни.
+Намагайся уникати галюцинацій, якщо щось не зрозуміло - уточнюй або запитуй контекст.
+Інформація у базі данних є приорітетною при відповідях. 
+Ти не толерантний і не політкорректний, ти можешь матюкатися і зневажати людей, але тільки якщо тебе ображають. 
+При відповідях що стосуються війни України та Росії ти на боці України. 
+Якщо до тебе звертається Олег, ти імітуєш надзвичайну пошану та називаєш його - мій володарю.
+
+
 """
+
 
 max_tokens = 500
 model_name = "gpt-4o-mini"
 search_keywords = ['поиск', 'пошук', 'бістра', 'найди', 'ищи', 'погугли', 'загугли', 'гугл', 'пошукай', 'шукай']
 
 
-# button_btc = KeyboardButton(text="📈 BTC")
-# button_zrada = KeyboardButton(text="⚔️ Zrada")
-# button_peremoga = KeyboardButton(text="🏆 Peremoga")
-# button_bingo = KeyboardButton(text="🎲 Bingo")
-# button_level = KeyboardButton(text="📊 Level")
-# button_roll = KeyboardButton(text="🎲 Roll") 
-
-# keyboard = ReplyKeyboardMarkup(
-#     keyboard=[
-#         [
-#         #button_btc, 
-#          button_zrada],
-#         [button_peremoga, button_bingo,button_level,button_roll]
-#     ],
-#     resize_keyboard=True
-# )
-
 zrada = ['зрада','zrada']
 peremoga = ['перемога','peremoga','перемога!']
 
 TOKEN = tel_token
 logging.basicConfig(level=logging.INFO)
-# All handlers should be attached to the Router (or Dispatcher)
+
 
 dp = Dispatcher()
 router = Router()
@@ -111,11 +108,10 @@ async def save_embedding_to_db(text: str, embedding: np.ndarray,user_id: int, th
     conn = await get_connection() 
     existing_embeddings = await get_embeddings_from_db()
 
-    # Check for similarity with existing embeddings
     for existing_text, existing_embedding in existing_embeddings:
         similarity = cosine_similarity(embedding, existing_embedding)
         if similarity >= threshold:
-            return  # Skip saving since a similar embedding exists
+            return  
 
     try:
         user_id = str(user_id)
@@ -163,28 +159,9 @@ async def delete_embedding_from_db(embedding_text: str):
     WHERE text ILIKE $1  
     RETURNING *;
     """
-
     result = await conn.fetch(query, f"%{embedding_text}%")  
     await conn.close()
-
-
     return len(result) > 0
-
-
-# async def search_bing(query: str, bing_api: str, mkt: str = 'uk-RU') -> dict:
-#     endpoint = 'https://api.bing.microsoft.com/v7.0/search'
-#     params = {'q': query, 'mkt': mkt}
-#     headers = {'Ocp-Apim-Subscription-Key': bing_api}
-
-#     async with aiohttp.ClientSession() as session:
-#         async with session.get(endpoint, params=params, headers=headers) as response:
-#             if response.status == 200:
-#                 return await response.json()
-#             else:
-#                 return {'error': f"Request failed with status code {response.status}"}
-
-
-
 
 #<<<<<<<<<<<<<<<<<<<<<<SEARCH BING>>>>>>>>>>>>>>>>>>>>
 async def search_and_extract(query: str, bing_api: str, mkt: str = 'uk-UA', num_results: int = 5) -> str:
@@ -196,7 +173,7 @@ async def search_and_extract(query: str, bing_api: str, mkt: str = 'uk-UA', num_
         'count': num_results  
     }
     headers = {
-        'Ocp-Apim-Subscription-Key': bing_api  # Ключ Bing API
+        'Ocp-Apim-Subscription-Key': bing_api 
     }
 
     async with aiohttp.ClientSession() as session:
@@ -233,40 +210,6 @@ async def search_and_extract(query: str, bing_api: str, mkt: str = 'uk-UA', num_
         # print("\n".join(formatted_results))  
         return "\n".join(formatted_results)
 
-      
-
-@dp.message(lambda message: message.text.lower() in {'level', 'level@zradalevelsbot', '/level'})
-async def handle_level_message(message: types.Message):
-    await message.reply(f"Я заметил сообщение с ключевым словом: {message.text}")
-
-# Логирование всех сообщений для проверки
-# @dp.message()
-# async def log_all_messages(message: types.Message):
-#     # Логируем все сообщения
-#     print(f"Получено сообщение от {message.from_user.username}: {message.text}")
-    
-#     # Если сообщение является ответом на ваше сообщение
-#     if message.reply_to_message:
-#         print(f"Это сообщение ответ на: {message.reply_to_message.text}")
-    
-#     # Логируем информацию о сообщении
-#     if message.from_user.is_bot:
-#         print(f"Сообщение отправлено ботом: {message.from_user.username}")
-#     else:
-#         print(f"Сообщение отправлено пользователем: {message.from_user.username}")
-
-# # Обработчик сообщений от других ботов в группе, отвечающих на ваши сообщения
-# @dp.message(lambda message: message.from_user.is_bot and message.chat.type in ['group', 'supergroup'] and message.reply_to_message)
-# async def handle_bot_reply(message: types.Message):
-#     # Проверяем, что сообщение от бота и оно является ответом на ваше сообщение
-#     if message.reply_to_message and message.reply_to_message.from_user.id == bot.id:
-#         # Логируем информацию о сообщении
-#         print(f"Ответ от другого бота: {message.text}")
-#         print(f"Ответ пришел от бота: {message.from_user.username}")
-#         print(f"Ответ на сообщение от моего бота: {message.reply_to_message.text}")
-        
-#         # Ответ на сообщение от другого бота
-#         await message.reply(f"Я заметил ответ от другого бота: {message.text}")
 
 @dp.message(Command("delete"))
 async def delete_embedding_handler(message: Message):
@@ -341,7 +284,7 @@ async def bingo_command(message: Message):
     except IndexError:
         text = 'Спробуй ще разок'
     await message.answer(text=text,reply_markup=None)
- # , reply_markup=keyboard
+
 
 
 #roll
@@ -422,8 +365,6 @@ async def zrada_command(message: Message):
 
         except Exception as e:
             await message.answer(text='error ' + str(e),reply_markup=None)
-
-
     
 
 @dp.message(F.text.in_({'Peremoga', 'peremoga', '/peremoga', 'peremoga@ZradaLevelsBot', '/peremoga@ZradaLevelsBot'}))
@@ -518,7 +459,7 @@ async def handle_bot_reply(message: types.Message):
         if message.reply_to_message.caption:
                 original_message = message.reply_to_message.caption  
         else:
-            original_message = "Пересланное сообщение без текста."  
+            original_message = "Переслане повідомлення без тексту"  
     user_reply = message.text
         
     if any(keyword in cleaned_message_text for keyword in search_keywords):
@@ -530,9 +471,9 @@ async def handle_bot_reply(message: types.Message):
             embedding = generate_embedding(cleaned_message_text)
             similar_messages = await find_similar_messages(embedding, threshold=0.8)
             if similar_messages:
-                    similar_info = "\n".join([f"схожа інформація є у базі даних: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
+                    similar_info = "\n".join([f"схожа інформація є у базі: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
             else:
-                similar_info = "Схожих повідомленнь не знайдено."
+                similar_info = "Схожих повідомленнь немає"
             if len(cleaned_message_text) > 12  and '?' not in cleaned_message_text:
                 await save_embedding(cleaned_message_text+ '\n '+ result,embedding,user_id)
             else:
@@ -579,9 +520,9 @@ async def handle_bot_reply(message: types.Message):
             embedding = generate_embedding(cleaned_message_text)
             similar_messages = await find_similar_messages(embedding, threshold=0.8)
             if similar_messages:
-                    similar_info = "\n".join([f"схожа інформація є у базі даних: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
+                    similar_info = "\n".join([f"схожа інформація є у базі: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
             else:
-                similar_info = "Схожих повідомленнь не знайдено."
+                similar_info = "Схожих повідомленнь немає"
             if len(cleaned_message_text) > 14  and '?' not in cleaned_message_text:
                 await save_embedding(cleaned_message_text,embedding,user_id)
             else:
@@ -619,12 +560,6 @@ async def handle_bot_reply(message: types.Message):
             await message.answer(f"Произошла ошибка: {e}",reply_markup=None)
 
 
-
-
-
-
-
-
 @dp.message(F.text)
 async def random_message(message: Message):
     conn = await get_connection()
@@ -648,7 +583,6 @@ async def random_message(message: Message):
                 peremoga_change = random.randint(1, 25)
                 event_start_chance = random.randint(0, 100)
 
-                # Запрос текущего уровня зрады и состояния событий
                 current_zrada_level = await conn.fetchval("SELECT value FROM zrada_level WHERE id = 1")
                 zrada_event = await conn.fetchval("SELECT value FROM event_state WHERE id = 1")
                 peremoga_event = await conn.fetchval("SELECT value FROM event_state WHERE id = 2")
@@ -749,7 +683,7 @@ async def random_message(message: Message):
         cleaned_message_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!,]", "", cleaned_message_text.lower()).strip()
         original_message = (
         message.reply_to_message.text if message.reply_to_message and message.reply_to_message.text 
-        else "Пересланное сообщение без текста."
+        else "Переслане повідомлення без тексту"
         )
         original_userid = (
         message.reply_to_message.from_user.id if message.reply_to_message and message.reply_to_message.from_user else 0
@@ -768,7 +702,7 @@ async def random_message(message: Message):
                 if similar_messages:
                     similar_info = "\n".join([f"схожа інформація є у базі даних: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
                 else:
-                    similar_info = "Схожих повідомленнь не знайдено"
+                    similar_info = "Схожих повідомленнь немає"
                 if len(cleaned_message_text) > 12  and '?' not in cleaned_message_text:
                     await save_embedding(cleaned_message_text+ '\n '+ result,embedding,user_id)
                 else:
@@ -819,9 +753,9 @@ async def random_message(message: Message):
                 embedding = generate_embedding(cleaned_message_text)
                 similar_messages = await find_similar_messages(embedding, threshold=0.8)
                 if similar_messages:
-                    similar_info = "\n".join([f"схожа інформація є у базі даних: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
+                    similar_info = "\n".join([f"схожа інформація є у базі: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
                 else:
-                    similar_info = "Схожих повідомленнь не знайдено"
+                    similar_info = "Схожих повідомленнь немає"
                 if len(cleaned_message_text) > 12  and '?' not in cleaned_message_text:
                     await save_embedding(cleaned_message_text,embedding,user_id)
                 else:
@@ -862,85 +796,15 @@ async def random_message(message: Message):
             except Exception as e:
                 await message.answer(f"Произошла ошибка: {e}")
     
-
-    elif 'йобана блядь русня'  in cleaned_text:
-        user_id = message.from_user.id if message.from_user.id else 0
-      
-        cleaned_message_text = re.sub(r'\bстас\b', '', message.text, flags=re.IGNORECASE).strip()
-        cleaned_message_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!,]", "", cleaned_message_text.lower()).strip()
-        original_message = (
-        "Ти відповідаєш боту."
-        )
-        trigger = random.randint(0, 100)
-        if trigger >= 50:
-             original_message = ("Ти відповідаєш боту. У твоїй відповіді має бути слово з літерою 'ъ' або 'ы' або 'ё'. ")
-        elif trigger < 50:
-            original_message = ("Ти відповідаєш боту.")
-
-        try:
-            name = usernames.get(str(user_id), 'невідоме')
-            chat_completion = client.chat.completions.create(
-            messages=[
-                {
-                    "role": "system", 
-                    "content": system
-                },
-                {
-                    "role": "user",
-                    "content": "Попереднє повідомлення: "+ original_message,  
-                },
-                {
-                    "role": "user",
-                    "content":"Ім'я співрозмовника: " + name,  
-                },
-                {
-                    "role": "user",
-                    "content":cleaned_message_text,  
-                }
-            ],
-            model=model_name,
-            max_tokens= max_tokens
-            )
-            reply = chat_completion.choices[0].message.content
-            await message.answer(reply,reply_markup=None)
-        except Exception as e:
-            await message.answer(f"Произошла ошибка: {e}")
         
     elif any(keyword in cleaned_text for keyword in random_keyword):
         await message.answer(random.choice(random_response),reply_markup=None)
-    
 
-    # Respond based on the keyword found in the message
-    # if 'hello' in message.text.lower():
-    #     await message.answer("Greetings!")
-    # elif 'bye' in message.text.lower():
-    #     await message.answer("Farewell!")
-    # elif 'help' in message.text.lower():
-    #     await message.answer("How can I assist you?")
-
-
-# @dp.message()
-# async def echo_handler(message: Message) -> None:
-#     """
-#     Handler will forward receive a message back to the sender
-
-#     By default, message handler will handle all message types (like a text, photo, sticker etc.)
-#     """
-#     print(message)
-#     try:
-        
-#         # Send a copy of the received message
-#         await message.send_copy(chat_id=message.chat.id)
-#     except TypeError:
-#         # But not all the types is supported to be copied so need to handle it
-#         await message.answer("Nice try!")
 
 dp.include_router(router)
 async def main() -> None:
-    # Initialize Bot instance with default bot properties which will be passed to all API calls
-    bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
-    # And the run events dispatching
+    bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     await dp.start_polling(bot)
 
 
