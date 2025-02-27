@@ -48,11 +48,6 @@ system = """
 accuracy = 0.31
 max_tokens = 500
 model_name = "gpt-4o-mini"
-search_keywords = ['поиск', 'пошук', 'бістра', 'найди', 'ищи', 'погугли', 'загугли', 'гугл', 'пошукай', 'шукай']
-question_marks = ['?','шо','що','что','расскажи','раскажи','роскажи','росскажи','привет','який','как','какой']
-
-zrada = ['зрада','zrada']
-peremoga = ['перемога','peremoga','перемога!']
 
 TOKEN = tel_token
 logging.basicConfig(level=logging.INFO)
@@ -69,33 +64,22 @@ client = OpenAI(
 
 
 
-# async def fetch_all_keywords_and_responses(conn):
-#     try:
-#         keywords_rows = await conn.fetch("SELECT keyword, category FROM keywords")
-#         responses_rows = await conn.fetch("SELECT response, category FROM responses")
-#         results = {
-#             'bmw': [],
-#             'mamka': [],
-#             'mamka_response': [],
-#             'bingo': [],
-#             'politics': [],
-#             'politics_response': []
-#         }
-
-#         for value, category in keywords_rows + responses_rows:
-#             if category in results:
-#                 results[category].append(value)
-
-#         return (
-#             results['bmw'],
-#             results['mamka'],
-#             results['mamka_response'],
-#             results['bingo'],
-#             results['politics'],
-#             results['politics_response']
-#         )
-#     finally:
-#         await conn.close()
+tools = [{
+    "type": "function",
+    "function": {
+        "name": "search_and_extract",
+        "description": "Asynchronously searches for a query using Bing API and extracts information from the results.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string"}
+            },
+            "required": ["query"],
+            "additionalProperties": False
+        },
+        "strict": True
+    }
+}]
 
 
 def normalize_l2(x):
@@ -110,7 +94,6 @@ def normalize_l2(x):
         return np.where(norm == 0, x, x / norm)
     
 
-    
 def generate_embedding(text: str):
     response = client.embeddings.create(
     model="text-embedding-3-small", input=text, encoding_format="float"
@@ -153,7 +136,6 @@ async def get_embeddings_from_db():
 
 
 def cosine_similarity(vec1, vec2):
-    print(np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2)))
     return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
 
 
@@ -230,24 +212,6 @@ async def search_and_extract(query: str) -> str:
             )
         # print("\n".join(formatted_results))  
         return "\n".join(formatted_results)
-    
-
-tools = [{
-    "type": "function",
-    "function": {
-        "name": "search_and_extract",
-        "description": "Asynchronously searches for a query using Bing API and extracts information from the results.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "query": {"type": "string"}
-            },
-            "required": ["query"],
-            "additionalProperties": False
-        },
-        "strict": True
-    }
-}]
 
 @dp.message(Command("delete"))
 async def delete_embedding_handler(message: Message):
@@ -297,44 +261,42 @@ async def delete_embedding_handler(message: Message):
 #     await message.answer(text='Рівень зради: ' + str(current_zrada_level) + '\n' + level,reply_markup=None)
 
 
-# #bitcoin
-# @dp.message(F.text.in_({'BTC', 'btc', '/btc', '/btc@ZradaLevelsBot', 'btc@ZradaLevelsBot'}))
-# async def btc_command(message: Message):
-#     try:
-#         async with aiohttp.ClientSession() as session:
-#             async with session.get('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT',timeout=15) as resp:
-#                 data =  await resp.json()
-#                 symbol = data['symbol']
-#                 price = float(data['price'])
-#                 price = "{:.2f}".format(price)
-#     except:
-#         price = 'Спробуй ще разок'
-#     await message.answer(text=str(price),reply_markup=None)
+#bitcoin
+@dp.message(F.text.in_({'BTC', 'btc', '/btc', '/btc@ZradaLevelsBot', 'btc@ZradaLevelsBot'}))
+async def btc_command(message: Message):
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT',timeout=15) as resp:
+                data =  await resp.json()
+                symbol = data['symbol']
+                price = float(data['price'])
+                price = "{:.2f}".format(price)
+    except:
+        price = 'Спробуй ще разок'
+    await message.answer(text=str(price),reply_markup=None)
 
 
-# #bingo
-# @dp.message(F.text.in_({'Bingo', 'bingo', '/bingo', '/bingo@ZradaLevelsBot', 'bingo@ZradaLevelsBot'}))
-# async def bingo_command(message: Message):
-#     conn = await get_connection()
-#     bmw, mamka, mamka_response, bingo, random_keyword, random_response = await fetch_all_keywords_and_responses(conn)
-#     try:
-#         text = random.choice(bingo)
-#     except IndexError:
-#         text = 'Спробуй ще разок'
-#     await message.answer(text=text,reply_markup=None)
+#bingo
+@dp.message(F.text.in_(bingo_trigger))
+async def bingo_command(message: Message):
+    try:
+        text = random.choice(bingo_list)
+    except IndexError:
+        text = 'Спробуй ще разок'
+    await message.answer(text=text,reply_markup=None)
 
 
 
-# #roll
-# @dp.message(F.text.in_({'Roll', 'roll', '/roll', '/roll@ZradaLevelsBot', 'roll@ZradaLevelsBot'}))
-# async def bingo_command(message: Message):
-#     try:
-#         text = random.randint(0,100)
-#     except: 
-#         text = 'Спробуй ще разок'
-#     await message.answer(text=f"{html.bold(message.from_user.full_name)} зролив {text}",reply_markup=None)
+#roll
+@dp.message(F.text.in_(roll))
+async def bingo_command(message: Message):
+    try:
+        text = random.randint(0,100)
+    except: 
+        text = 'Спробуй ще разок'
+    await message.answer(text=f"{html.bold(message.from_user.full_name)} зролив {text}",reply_markup=None)
 
-# #@dp.message(F.text.in_({'', '', ''}))
+
 # @dp.message(F.text.in_({'Zrada', 'zrada', '/zrada', 'zrada@ZradaLevelsBot', '/zrada@ZradaLevelsBot'}))
 # async def zrada_command(message: Message):
 #     conn = await get_connection()  
@@ -498,10 +460,9 @@ async def handle_bot_reply(message: types.Message):
                 original_message = message.reply_to_message.caption  
         else:
             original_message = "Переслане повідомлення без тексту"  
-    user_reply = message.text
         
     if any(keyword in cleaned_message_text for keyword in search_keywords):
-        query = re.sub(r'\b(стас|поиск)\b', '', message.text, flags=re.IGNORECASE).strip()
+        query = re.sub(r'\b(стас|поиск|пошук|погугли|гугл)\b', '', message.text, flags=re.IGNORECASE).strip()
         result = await search_and_extract(query)  
 
     try:
@@ -554,29 +515,29 @@ async def handle_bot_reply(message: types.Message):
         if tool_calls:
             tool_call = tool_calls[0]  # Допустим, только одна функция вызывается
             args = json.loads(tool_call.function.arguments)
-            # Выполняем функцию поиска
+            # функція
             result = await search_and_extract(args["query"])
-            # Подаем результат обратно в модель
+            # результат функції в модель
             messages.append(chat_completion.choices[0].message)  # Добавляем сообщение с вызовом функции
             messages.append({
                 "role": "tool",
                 "tool_call_id": tool_call.id,
                 "content": result
             })
-            # Второй запрос для модели с результатами
+            # другий запит з результатом
             completion_2 = client.chat.completions.create(
-                model="gpt-4o",
+                model=model_name,
                 messages=messages,
                 tools=tools,
             )
-            # Ответ модели
+            # відповідь моделі
             reply = completion_2.choices[0].message.content
         else:
             reply = chat_completion.choices[0].message.content
-        # Отправляем ответ
+   
         await message.answer(reply, reply_markup=None)
     except Exception as e:
-        await message.answer(f"Произошла ошибка: {e}")
+        await message.answer(f"Сталася прикрість: {e}")
 
 
 @dp.message(F.text)
@@ -701,17 +662,14 @@ async def random_message(message: Message):
         cleaned_message_text = re.sub(r'\bстас\b', '', message.text, flags=re.IGNORECASE).strip()
         cleaned_message_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!,]", "", cleaned_message_text.lower()).strip()
         original_message = (
-        message.reply_to_message.text if message.reply_to_message and message.reply_to_message.text 
-        else "Переслане повідомлення без тексту"
-        )
+        message.reply_to_message.text if message.reply_to_message and message.reply_to_message.text else "Переслане повідомлення без тексту")
         original_userid = (
-        message.reply_to_message.from_user.id if message.reply_to_message and message.reply_to_message.from_user else 0
-        )
-
+        message.reply_to_message.from_user.id if message.reply_to_message and message.reply_to_message.from_user else 0)
         original_user_id = original_userid if original_userid else 0
         query = cleaned_message_text
+
         if any(keyword in cleaned_text for keyword in search_keywords):
-            query = re.sub(r'\b(стас|поиск)\b', '', message.text, flags=re.IGNORECASE).strip()
+            query = re.sub(r'\b(стас|поиск|пошук|погугли|гугл)\b', '', message.text, flags=re.IGNORECASE).strip()
             result = await search_and_extract(query)
         try:
             name = usernames.get(str(user_id), 'невідоме')
@@ -766,35 +724,44 @@ async def random_message(message: Message):
             
             tool_calls = chat_completion.choices[0].message.tool_calls
             if tool_calls:
-                tool_call = tool_calls[0]  # Допустим, только одна функция вызывается
-                args = json.loads(tool_call.function.arguments)
+                results = []
 
-                # Выполняем функцию поиска
-                result = await search_and_extract(args["query"])
+                messages.append(chat_completion.choices[0].message)
 
-                # Подаем результат обратно в модель
-                messages.append(chat_completion.choices[0].message)  # Добавляем сообщение с вызовом функции
-                messages.append({
-                    "role": "tool",
-                    "tool_call_id": tool_call.id,
-                    "content": result
-                })
+                for tool_call in tool_calls:
+                    args = json.loads(tool_call.function.arguments)
 
-                # Второй запрос для модели с результатами
+                    # Выполняем соответствующую функцию
+                    if tool_call.function.name == "search_and_extract":
+                        result = await search_and_extract(args["query"])
+                    # elif tool_call.function.name == "another_function":        # наступна функція
+                    #     result = await another_function(args)
+
+                    results.append({
+                        "tool_call_id": tool_call.id,
+                        "content": result
+                    })
+
+
+                for result in results:
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": result["tool_call_id"],
+                        "content": result["content"]
+                    })
+
                 completion_2 = client.chat.completions.create(
-                    model="gpt-4o",
+                    model=model_name,
                     messages=messages,
                     tools=tools,
                 )
 
-                # Ответ модели
                 reply = completion_2.choices[0].message.content
             else:
                 reply = chat_completion.choices[0].message.content
-            # Отправляем ответ
             await message.answer(reply, reply_markup=None)
         except Exception as e:
-            await message.answer(f"Произошла ошибка: {e}")
+            await message.answer(f"Ой вей: {e}")
 
         
     # elif any(keyword in cleaned_text for keyword in random_keyword):
