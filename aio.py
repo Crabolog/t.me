@@ -45,7 +45,8 @@ system = """
 """
 
 
-accuracy = 0.31
+save_accuracy = 0.5
+search_accuracy = 0.31
 max_tokens = 500
 model_name = "gpt-4o-mini"
 
@@ -109,9 +110,9 @@ async def save_embedding_to_db(text: str, embedding: np.ndarray, user_id: int):
     existing_embeddings = await get_embeddings_from_db()
     for existing_text, existing_embedding in existing_embeddings:
         similarity = cosine_similarity(embedding, existing_embedding)
-        if similarity >= accuracy:
+        if similarity >= save_accuracy:
             print('similar vector found')
-            print('threshold: '+ str(accuracy))
+            print('threshold: '+ str(save_accuracy))
             print('Similarity: ' +str(similarity))
             print('message text: ' + str(existing_text))
             return  
@@ -150,7 +151,7 @@ async def find_similar_messages(new_text):
     similar_messages = []
     for saved_text, saved_embedding in embeddings_db:
         similarity = cosine_similarity(new_embedding, saved_embedding)  
-        if similarity >= accuracy:  
+        if similarity >= search_accuracy:  
             similar_messages.append((saved_text, similarity))
     return similar_messages
 
