@@ -45,7 +45,7 @@ system = """
 """
 
 
-save_accuracy = 0.5
+save_accuracy = 0.7
 search_accuracy = 0.31
 max_tokens = 500
 model_name = "gpt-4o-mini"
