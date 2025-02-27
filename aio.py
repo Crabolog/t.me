@@ -41,6 +41,7 @@ system = """
 Ти не толерантний і не політкорректний, ти можешь матюкатися і зневажати людей, але тільки якщо тебе ображають. 
 При відповідях що стосуються війни України та Росії ти на боці України. 
 Якщо до тебе звертається Олег, ти імітуєш надзвичайну пошану та називаєш його - мій володарю.
+ти не нав'язуєш спілкування і задаєш питання лише для уточнення.
 
 
 """
@@ -290,7 +291,6 @@ async def bingo_command(message: Message):
     await message.answer(text=text,reply_markup=None)
 
 
-
 #roll
 @dp.message(F.text.in_(roll))
 async def bingo_command(message: Message):
@@ -517,31 +517,37 @@ async def handle_bot_reply(message: types.Message):
         
         tool_calls = chat_completion.choices[0].message.tool_calls
         if tool_calls:
-            tool_call = tool_calls[0]  # Допустим, только одна функция вызывается
-            args = json.loads(tool_call.function.arguments)
-            # функція
-            result = await search_and_extract(args["query"])
-            # результат функції в модель
-            messages.append(chat_completion.choices[0].message)  # Добавляем сообщение с вызовом функции
-            messages.append({
-                "role": "tool",
-                "tool_call_id": tool_call.id,
-                "content": result
-            })
-            # другий запит з результатом
+            results = []
+            messages.append(chat_completion.choices[0].message)
+            for tool_call in tool_calls:
+                args = json.loads(tool_call.function.arguments)
+                # Выполняем соответствующую функцию
+                if tool_call.function.name == "search_and_extract":
+                    result = await search_and_extract(args["query"])
+                # elif tool_call.function.name == "another_function":        # наступна функція
+                #     result = await another_function(args)
+                results.append({
+                    "tool_call_id": tool_call.id,
+                    "content": result
+                })
+            for result in results:
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": result["tool_call_id"],
+                    "content": result["content"]
+                })
             completion_2 = client.chat.completions.create(
                 model=model_name,
                 messages=messages,
                 tools=tools,
             )
-            # відповідь моделі
             reply = completion_2.choices[0].message.content
         else:
             reply = chat_completion.choices[0].message.content
-   
         await message.answer(reply, reply_markup=None)
     except Exception as e:
-        await message.answer(f"Сталася прикрість: {e}")
+        await message.answer(f"Ой вей: {e}")
+
 
 
 @dp.message(F.text)
