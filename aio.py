@@ -113,7 +113,7 @@ async def save_embedding_to_db(text: str, embedding: np.ndarray, user_id: int):
             print('similar vector found')
             print('threshold: '+ str(accuracy))
             print('Similarity: ' +str(similarity))
-            print('message test: ' + str(text))
+            print('message text: ' + str(existing_text))
             return  
     try:
         print('saving')
@@ -152,9 +152,6 @@ async def find_similar_messages(new_text):
         similarity = cosine_similarity(new_embedding, saved_embedding)  
         if similarity >= accuracy:  
             similar_messages.append((saved_text, similarity))
-            print('similar message')
-            print(similarity)
-            print(saved_text)
     return similar_messages
 
 
