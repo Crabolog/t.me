@@ -110,9 +110,10 @@ async def save_embedding_to_db(text: str, embedding: np.ndarray, user_id: int):
     for existing_text, existing_embedding in existing_embeddings:
         similarity = cosine_similarity(embedding, existing_embedding)
         if similarity >= accuracy:
-            print('same')
-            print(similarity)
-            print(text)
+            print('similar vector found')
+            print('threshold: '+ str(accuracy))
+            print('Similarity: ' +str(similarity))
+            print('message test: ' + str(text))
             return  
     try:
         print('saving')
