@@ -110,8 +110,12 @@ async def save_embedding_to_db(text: str, embedding: np.ndarray, user_id: int):
     for existing_text, existing_embedding in existing_embeddings:
         similarity = cosine_similarity(embedding, existing_embedding)
         if similarity >= accuracy:
+            print('same')
+            print(similarity)
+            print(text)
             return  
     try:
+        print('saving')
         embedding_rounded = np.round(embedding, 8)
         embedding_list = embedding_rounded.tolist()
         user_id = str(user_id)
