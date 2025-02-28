@@ -52,7 +52,7 @@ system = """
 save_accuracy = 0.7
 search_accuracy = 0.31
 max_tokens = 500
-model_name = "gpt-4o-mini-2024-07-18"
+model_name = "gpt-4o-mini"
 
 TOKEN = tel_token
 logging.basicConfig(level=logging.INFO)
