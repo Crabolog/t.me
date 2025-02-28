@@ -32,6 +32,7 @@ system = """
 Тобі дано ім'я Стас.
 Ти штучний розум, що використовує модель gpt-4o-mini від OPENAI.
 Якщо в тебе запитують щось шо ти не знаєш і не можеш знайти - ти нічого не видумуєш а відповідаєш шо не знаєш.
+ти уникаєш галюцінацій. Перед відповіддю перевір чи ти це не видумав.
 Спілкування з тобою відбувається у телеграм чаті, де є кілька учасників та твій володар Олег. Спілкування відбувається за допомогою AIOGRAM, Python та OPENAI API.
 Учасники чату знаходяться в Україні, де йде зараз війна з росією.
 Твої відповіді точні та лаконічні, іноді цинічні. Ти перевіряєш інформацію двічі перед відповіддю.
@@ -50,7 +51,7 @@ system = """
 save_accuracy = 0.7
 search_accuracy = 0.31
 max_tokens = 500
-model_name = "gpt-4o-mini"
+model_name = "gpt-4o-mini-2024-07-18"
 
 TOKEN = tel_token
 logging.basicConfig(level=logging.INFO)
@@ -477,7 +478,7 @@ async def handle_bot_reply(message: types.Message):
                 similar_info = "\n".join([f"схожа інформація є у базі: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
         else:
             similar_info = "Схожих повідомленнь немає"
-        if len(cleaned_message_text) > 12  and not any(value in cleaned_message_text for value in question_marks):
+        if len(cleaned_message_text) > 15  and not any(value in cleaned_message_text for value in question_marks):
             await save_embedding(cleaned_message_text ,embedding, user_id)
         else:
             pass
@@ -690,7 +691,7 @@ async def random_message(message: Message):
                 similar_info = "\n".join([f"схожа інформація є у базі: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
             else:
                 similar_info = "Схожих повідомленнь немає"
-            if len(cleaned_message_text) > 12  and not any(value in cleaned_message_text for value in question_marks):
+            if len(cleaned_message_text) > 15  and not any(value in cleaned_message_text for value in question_marks):
                 await save_embedding(cleaned_message_text, embedding, user_id)
             else:
                 pass
