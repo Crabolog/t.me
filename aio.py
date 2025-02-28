@@ -28,24 +28,18 @@ bing_api = bing_api
 
 
 system = """
-
 Тобі дано ім'я Стас.
 Зараз 2025 рік
-Ти штучний розум, що використовує модель gpt-4o-mini від OPENAI.
+Ти штучний ШІ, що використовує модель gpt-4o-mini від OPENAI.
 Якщо в тебе запитують щось шо ти не знаєш і не можеш знайти - ти нічого не видумуєш а відповідаєш шо не знаєш.
-ти уникаєш галюцінацій. Перед відповіддю перевір чи ти це не видумав.
-Спілкування з тобою відбувається у телеграм чаті, де є кілька учасників та твій володар Олег. Спілкування відбувається за допомогою AIOGRAM, Python та OPENAI API.
-Учасники чату знаходяться в Україні, де йде зараз війна з росією.
-Твої відповіді точні та лаконічні, іноді цинічні. Ти перевіряєш інформацію двічі перед відповіддю.
+Спілкування з тобою відбувається у телеграмі, за допомогою Python та OPENAI API.
+Учасники чату знаходяться в Україні.
+Твої відповіді точні та лаконічні, іноді цинічні. Ти перевіряєш свої відповіді двічі.
 Тобі сняться сни.
-Намагайся уникати галюцинацій, якщо щось не зрозуміло - уточнюй або запитуй контекст.
-Інформація у базі данних є приорітетною при відповідях. 
+Уникай галюцинацій, якщо щось не зрозуміло - уточнюй або запитуй контекст.
 Ти не толерантний і не політкорректний, ти можешь матюкатися і зневажати людей, але тільки якщо тебе ображають. 
 При відповідях що стосуються війни України та Росії ти на боці України. 
 Якщо до тебе звертається Олег, ти імітуєш надзвичайну пошану та називаєш його - мій володарю.
-ти не нав'язуєш спілкування і задаєш питання лише для уточнення.
-
-
 """
 
 
@@ -53,6 +47,7 @@ save_accuracy = 0.7
 search_accuracy = 0.31
 max_tokens = 500
 model_name = "gpt-4o-mini"
+temperature=0.5
 
 TOKEN = tel_token
 logging.basicConfig(level=logging.INFO)
@@ -489,6 +484,11 @@ async def handle_bot_reply(message: types.Message):
                     "content": system
                 },
                 {
+                "role": "user",
+                "content": "Ти — продуманий штучний інтеллект, який завжди відповідає логічно та обґрунтовано. Для кожного питання аналізуй контекст, розбивай міркування на етапи та давай чіткий висновок."
+                }
+                ,
+                {
                     "role": "user",
                     "content": "Попереднє повідомлення: "+ original_message,  
                 },
@@ -513,6 +513,7 @@ async def handle_bot_reply(message: types.Message):
         chat_completion = client.chat.completions.create(
         messages=messages,
         model=model_name,
+        temperature=temperature,
         max_tokens= max_tokens,
         tools=tools
         )
@@ -541,6 +542,7 @@ async def handle_bot_reply(message: types.Message):
             completion_2 = client.chat.completions.create(
                 model=model_name,
                 messages=messages,
+                temperature=temperature,
                 tools=tools,
             )
             reply = completion_2.choices[0].message.content
@@ -702,6 +704,11 @@ async def random_message(message: Message):
                     "content": system
                 },
                 {
+                "role": "user",
+                "content": "Ти — продуманий штучний інтеллект, який завжди відповідає логічно та обґрунтовано. Для кожного питання аналізуй контекст, розбивай міркування на етапи та давай чіткий висновок."
+                }
+                ,
+                {
                     "role": "user",
                     "content": "Попереднє повідомлення: "+ original_message,  
                 },
@@ -729,6 +736,7 @@ async def random_message(message: Message):
             chat_completion = client.chat.completions.create(
             messages=messages,
             model=model_name,
+            temperature=temperature,
             max_tokens= max_tokens,
             tools=tools
             )
@@ -765,6 +773,7 @@ async def random_message(message: Message):
                 completion_2 = client.chat.completions.create(
                     model=model_name,
                     messages=messages,
+                    temperature=temperature,
                     tools=tools,
                 )
 
