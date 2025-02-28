@@ -42,6 +42,12 @@ system = """
 Якщо до тебе звертається Олег, ти імітуєш надзвичайну пошану та називаєш його - мій володарю.
 """
 
+logging.basicConfig(
+    filename="/home/pi/tbot/log.log", 
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
+
 
 save_accuracy = 0.7
 search_accuracy = 0.31
@@ -125,6 +131,9 @@ async def save_embedding_to_db(text: str, embedding: np.ndarray, user_id: int):
         VALUES ($1, $2::FLOAT8[], $3)
         """
         await conn.execute(query, text, embedding_list, user_id)
+    except Exception as e:
+        logging.error(e)
+        
     finally:
         await conn.close() 
 
@@ -149,7 +158,9 @@ async def find_similar_messages(new_text):
     embeddings_db = await get_embeddings_from_db()  
     similar_messages = []
     for saved_text, saved_embedding in embeddings_db:
-        similarity = cosine_similarity(new_embedding, saved_embedding)  
+        similarity = cosine_similarity(new_embedding, saved_embedding)
+        print(saved_text)
+        print(similarity)
         if similarity >= search_accuracy:  
             similar_messages.append((saved_text, similarity))
     return similar_messages
@@ -207,6 +218,7 @@ async def search_and_extract(query: str) -> str:
                     else:
                         main_text = f"Помилка сторінки: Код {page_response.status}"
             except Exception as e:
+                logging.error(e)
                 main_text = f"Помилка: {e}"
 
             formatted_results.append(
@@ -460,8 +472,10 @@ async def handle_bot_reply(message: types.Message):
         if message.reply_to_message.caption:
                 original_message = message.reply_to_message.caption  
         else:
-            original_message = "Переслане повідомлення без тексту"  
-        
+            original_message = "Переслане повідомлення без тексту"
+
+    logging.info(f"User {user_id} sent message: {message.text}")
+
     if any(keyword in cleaned_message_text for keyword in search_keywords):
         query = re.sub(r'\b(стас|поиск|пошук|погугли|гугл)\b', '', message.text, flags=re.IGNORECASE).strip()
         result = await search_and_extract(query)  
@@ -472,8 +486,12 @@ async def handle_bot_reply(message: types.Message):
         similar_messages = await find_similar_messages(embedding)
         if similar_messages:
                 similar_info = "\n".join([f"схожа інформація є у базі: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
+                logging.info(f"схожа інформація є у базі: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages)
         else:
             similar_info = "Схожих повідомленнь немає"
+            
+        logging.info(f"схожа інформація є у базі: {similar_info}")
+       
         if len(cleaned_message_text) > 15  and not any(value in cleaned_message_text for value in question_marks):
             await save_embedding(cleaned_message_text ,embedding, user_id)
         else:
@@ -547,9 +565,11 @@ async def handle_bot_reply(message: types.Message):
             )
             reply = completion_2.choices[0].message.content
         else:
-            reply = chat_completion.choices[0].message.content
+            reply = chat_completion.choices[0].message.conten
+        logging.info(f"Reply to user {user_id}: {reply}")
         await message.answer(reply, reply_markup=None)
     except Exception as e:
+        logging.error(e)
         await message.answer(f"Ой вей: {e}")
 
 
@@ -685,8 +705,10 @@ async def random_message(message: Message):
         if any(keyword in cleaned_text for keyword in search_keywords):
             query = re.sub(r'\b(стас|поиск|пошук|погугли|гугл)\b', '', message.text, flags=re.IGNORECASE).strip()
             result = await search_and_extract(query)
+        logging.info(f"User {user_id} sent message: {message.text}")
         try:
             name = usernames.get(str(user_id), 'невідоме')
+            print(name)
             original_name = usernames.get(str(original_user_id), 'невідоме')
             embedding = generate_embedding(cleaned_message_text)
             similar_messages = await find_similar_messages(embedding)
@@ -694,6 +716,9 @@ async def random_message(message: Message):
                 similar_info = "\n".join([f"схожа інформація є у базі: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
             else:
                 similar_info = "Схожих повідомленнь немає"
+            
+            logging.info(f"схожа інформація є у базі: {similar_info}")
+
             if len(cleaned_message_text) > 15  and not any(value in cleaned_message_text for value in question_marks):
                 await save_embedding(cleaned_message_text, embedding, user_id)
             else:
@@ -780,8 +805,10 @@ async def random_message(message: Message):
                 reply = completion_2.choices[0].message.content
             else:
                 reply = chat_completion.choices[0].message.content
+                logging.info(f"Reply to user {user_id}: {reply}")
             await message.answer(reply, reply_markup=None)
         except Exception as e:
+            logging.error(e)
             await message.answer(f"Ой вей: {e}")
 
         
