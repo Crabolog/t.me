@@ -25,7 +25,7 @@ from aiogram.types import Message
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 import numpy as np
 from bs4 import BeautifulSoup
-
+test = '1'
 bing_api = bing_api
 
 
