@@ -263,8 +263,21 @@ async def reboot_pi():
 
 async def git_pull():
     await asyncio.sleep(3)  
-    process = await asyncio.create_subprocess_shell("sudo git pull tbot master")
-    await process.communicate()
+    repo_path = "/home/pi/tbot"  # Change this to your actual repository path
+    process = await asyncio.create_subprocess_shell(
+        f"cd {repo_path} && sudo git pull tbot master",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE
+    )
+    stdout, stderr = await process.communicate()
+    
+    if process.returncode == 0:
+        return(f"Git pull successful:\n{stdout.decode()}")
+    else:
+        return(f"Git pull failed:\n{stderr.decode()}")
+
+
+
 
 @dp.message(Command("delete"))
 async def delete_embedding_handler(message: Message):
