@@ -565,7 +565,7 @@ async def handle_bot_reply(message: types.Message):
             )
             reply = completion_2.choices[0].message.content
         else:
-            reply = chat_completion.choices[0].message.conten
+            reply = chat_completion.choices[0].message.content
         logging.info(f"Reply to user {user_id}: {reply}")
         await message.answer(reply, reply_markup=None)
     except Exception as e:
