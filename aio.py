@@ -3,7 +3,9 @@ import aiohttp
 import logging
 import re
 import json
+import os
 import sys
+import subprocess
 from os import getenv
 from settings import conn
 from settings import *
@@ -43,7 +45,7 @@ system = """
 """
 
 logging.basicConfig(
-    filename="/home/pi/tbot/log.log", 
+    filename="C:\\Users\\Crabolog\\Desktop\\code\\t.me\\log.txt", 
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
@@ -85,7 +87,21 @@ tools = [{
         },
         "strict": True
     }
+}, {
+    "type": "function",
+    "function": {
+        "name": "reboot_pi",
+        "description": "Reboots the Raspberry Pi asynchronously after a short delay.",
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": False
+        },
+        "strict": True
+    }
 }]
+
 
 
 def normalize_l2(x):
@@ -226,6 +242,11 @@ async def search_and_extract(query: str) -> str:
             )
         # print("\n".join(formatted_results))  
         return "\n".join(formatted_results)
+
+async def reboot_pi():
+    await asyncio.sleep(3)  
+    process = await asyncio.create_subprocess_shell("sudo shutdown -r now")
+    await process.communicate() 
 
 @dp.message(Command("delete"))
 async def delete_embedding_handler(message: Message):
@@ -545,8 +566,10 @@ async def handle_bot_reply(message: types.Message):
                 # Выполняем соответствующую функцию
                 if tool_call.function.name == "search_and_extract":
                     result = await search_and_extract(args["query"])
-                # elif tool_call.function.name == "another_function":        # наступна функція
-                #     result = await another_function(args)
+                elif tool_call.function.name == "reboot_pi":
+                    result = "Відбувається перезавантаження"
+                    await reboot_pi()
+
                 results.append({
                     "tool_call_id": tool_call.id,
                     "content": result
@@ -779,8 +802,10 @@ async def random_message(message: Message):
                     # Выполняем соответствующую функцию
                     if tool_call.function.name == "search_and_extract":
                         result = await search_and_extract(args["query"])
-                    # elif tool_call.function.name == "another_function":        # наступна функція
-                    #     result = await another_function(args)
+                    elif tool_call.function.name == "reboot_pi":
+                        result = "Відбувається перезавантаження"
+                        await reboot_pi()
+
 
                     results.append({
                         "tool_call_id": tool_call.id,
