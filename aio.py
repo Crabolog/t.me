@@ -45,7 +45,7 @@ system = """
 """
 
 logging.basicConfig(
-    filename="/home/pi/tbot/log.log", 
+    filename="C:\\Users\\Crabolog\\Desktop\\code\\t.me\\log.txt", 
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
@@ -76,7 +76,7 @@ tools = [{
     "type": "function",
     "function": {
         "name": "search_and_extract",
-        "description": "Asynchronously searches for a query using Bing API and extracts information from the results.",
+        "description": "Asynchronously searches for information using Bing API",
         "parameters": {
             "type": "object",
             "properties": {
@@ -91,7 +91,20 @@ tools = [{
     "type": "function",
     "function": {
         "name": "reboot_pi",
-        "description": "Reboots the Raspberry Pi asynchronously after a short delay.",
+        "description": "Reboots the Raspberry Pi asynchronously.",
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": False
+        },
+        "strict": True
+    }
+}, {
+    "type": "function",
+    "function": {
+        "name": "git_pull",
+        "description": "Asynchronously pulls the latest changes from the 'master' branch.",
         "parameters": {
             "type": "object",
             "properties": {},
@@ -247,6 +260,11 @@ async def reboot_pi():
     await asyncio.sleep(3)  
     process = await asyncio.create_subprocess_shell("sudo shutdown -r now")
     await process.communicate() 
+
+async def git_pull():
+    await asyncio.sleep(3)  
+    process = await asyncio.create_subprocess_shell("sudo git pull tbot master")
+    await process.communicate()
 
 @dp.message(Command("delete"))
 async def delete_embedding_handler(message: Message):
@@ -569,6 +587,9 @@ async def handle_bot_reply(message: types.Message):
                 elif tool_call.function.name == "reboot_pi":
                     result = "Відбувається перезавантаження"
                     await reboot_pi()
+                elif tool_call.function.name == "git_pull":
+                        result = "Виконую git pull"
+                        await git_pull()
 
                 results.append({
                     "tool_call_id": tool_call.id,
@@ -603,13 +624,13 @@ async def random_message(message: Message):
     cleaned_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", message.text.lower())
     # bmw, mamka, mamka_response, bingo, random_keyword, random_response = await fetch_all_keywords_and_responses(conn)
 
-    # if any(keyword in cleaned_text for keyword in bmw):
-    #     logging.info("bmw handler triggered.")
-    #     await message.answer("Беха топ",reply_markup=None)
+    if any(keyword in cleaned_text for keyword in bmw):
+        logging.info("bmw handler triggered.")
+        await message.answer("Беха топ",reply_markup=None)
 
-    # elif any(keyword in cleaned_text for keyword in mamka):
-    #     logging.info("mamka handler triggered.")
-    #     await message.answer(random.choice(mamka_response))
+    elif any(keyword in cleaned_text for keyword in mamka):
+        logging.info("mamka handler triggered.")
+        await message.answer(random.choice(mamka_response))
 
     # # zrada
     # elif any(keyword in cleaned_text for keyword in zrada):
@@ -713,7 +734,7 @@ async def random_message(message: Message):
     #         except Exception as e:
     #             await message.answer(text='Спробуй ще: ' + str(e),reply_markup=None)
 
-    if 'стас' in cleaned_text:
+    elif 'стас' in cleaned_text:
         user_id = message.from_user.id if message.from_user.id else 0
         result = 'немає'
         cleaned_message_text = re.sub(r'\bстас\b', '', message.text, flags=re.IGNORECASE).strip()
@@ -805,7 +826,9 @@ async def random_message(message: Message):
                     elif tool_call.function.name == "reboot_pi":
                         result = "Відбувається перезавантаження"
                         await reboot_pi()
-
+                    elif tool_call.function.name == "git_pull":
+                        result = "Виконую git pull"
+                        await git_pull()
 
                     results.append({
                         "tool_call_id": tool_call.id,
@@ -837,8 +860,8 @@ async def random_message(message: Message):
             await message.answer(f"Ой вей: {e}")
 
         
-    # elif any(keyword in cleaned_text for keyword in random_keyword):
-    #     await message.answer(random.choice(random_response),reply_markup=None)
+    elif any(keyword in cleaned_text for keyword in random_keyword):
+        await message.answer(random.choice(random_response),reply_markup=None)
 
 
 dp.include_router(router)
