@@ -45,7 +45,7 @@ system = """
 """
 
 logging.basicConfig(
-    filename="C:\\Users\\Crabolog\\Desktop\\code\\t.me\\log.txt", 
+    filename="/home/pi/tbot/log.log", 
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
