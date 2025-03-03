@@ -55,7 +55,7 @@ save_accuracy = 0.7
 search_accuracy = 0.31
 max_tokens = 500
 model_name = "gpt-4o-mini"
-temperature=0.5
+temperature=0.8
 
 TOKEN = tel_token
 logging.basicConfig(level=logging.INFO)
