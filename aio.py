@@ -3,6 +3,7 @@ import aiohttp
 import logging
 import re
 import json
+from collections import deque
 import os
 import sys
 import subprocess
@@ -25,7 +26,6 @@ from aiogram.types import Message
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 import numpy as np
 from bs4 import BeautifulSoup
-test = '2'
 bing_api = bing_api
 
 
@@ -45,11 +45,11 @@ system = """
 """
 
 logging.basicConfig(
-    filename="C:\\Users\\Crabolog\\Desktop\\code\\t.me\\log.txt", 
+    filename="/home/pi/tbot/log.log", 
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
-
+chat_history = deque(maxlen=10)
 
 save_accuracy = 0.7
 search_accuracy = 0.31
@@ -520,6 +520,7 @@ async def handle_bot_reply(message: types.Message):
     original_message = message.reply_to_message.text if message.reply_to_message else message.text
     cleaned_message_text = re.sub(r'\bстас\b', '', message.text, flags=re.IGNORECASE).strip()
     cleaned_message_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!,]", "", cleaned_message_text.lower()).strip()
+    chat_history.append({"role": "user", "content": cleaned_message_text})
     if not original_message and message.reply_to_message:
         if message.reply_to_message.caption:
                 original_message = message.reply_to_message.caption  
@@ -579,7 +580,7 @@ async def handle_bot_reply(message: types.Message):
                     "content":cleaned_message_text,  
                 }
             ]
-        
+        messages.extend(list(chat_history))
         chat_completion = client.chat.completions.create(
         messages=messages,
         model=model_name,
@@ -635,6 +636,8 @@ async def handle_bot_reply(message: types.Message):
 async def random_message(message: Message):
     conn = await get_connection()
     cleaned_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", message.text.lower())
+    chat_history.append({"role": "user", "content": cleaned_message_text})
+    
     # bmw, mamka, mamka_response, bingo, random_keyword, random_response = await fetch_all_keywords_and_responses(conn)
 
     if any(keyword in cleaned_text for keyword in bmw):
@@ -815,6 +818,7 @@ async def random_message(message: Message):
                     "content":cleaned_message_text,  
                 }
             ]
+            messages.extend(list(chat_history))
             chat_completion = client.chat.completions.create(
             messages=messages,
             model=model_name,
