@@ -520,7 +520,7 @@ async def handle_bot_reply(message: types.Message):
     original_message = message.reply_to_message.text if message.reply_to_message else message.text
     cleaned_message_text = re.sub(r'\bстас\b', '', message.text, flags=re.IGNORECASE).strip()
     cleaned_message_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!,]", "", cleaned_message_text.lower()).strip()
-    chat_history.append({"role": "user", "content": cleaned_message_text})
+    chat_history.append({"role": "user", "content": })
     if not original_message and message.reply_to_message:
         if message.reply_to_message.caption:
                 original_message = message.reply_to_message.caption  
@@ -636,7 +636,7 @@ async def handle_bot_reply(message: types.Message):
 async def random_message(message: Message):
     conn = await get_connection()
     cleaned_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", message.text.lower())
-    chat_history.append({"role": "user", "content": cleaned_message_text})
+    chat_history.append({"role": "user", "content": cleaned_text})
     
     # bmw, mamka, mamka_response, bingo, random_keyword, random_response = await fetch_all_keywords_and_responses(conn)
 
