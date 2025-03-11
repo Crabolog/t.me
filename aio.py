@@ -53,7 +53,7 @@ chat_history = deque(maxlen=10)
 
 save_accuracy = 0.7
 search_accuracy = 0.31
-max_tokens = 500
+max_tokens = 350
 model_name = "gpt-4o-mini"
 temperature=0.8
 
