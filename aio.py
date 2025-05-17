@@ -28,11 +28,12 @@ import numpy as np
 from bs4 import BeautifulSoup
 
 
+
 bing_api = bing_api
 save_accuracy = 0.7
-search_accuracy = 0.31
+search_accuracy = 0.35
 max_tokens = 400
-model_name = "gpt-4.1-mini"
+model_name = "gpt-4.1-nano"
 temperature=0.8
 
 TOKEN = tel_token
@@ -146,13 +147,12 @@ async def save_embedding_to_db(text: str, embedding: np.ndarray, user_id: int):
     for existing_text, existing_embedding in existing_embeddings:
         similarity = cosine_similarity(embedding, existing_embedding)
         if similarity >= save_accuracy:
-            print('similar vector found')
-            print('threshold: '+ str(save_accuracy))
-            print('Similarity: ' +str(similarity))
-            print('message text: ' + str(existing_text))
+            # print('similar vector found')
+            # print('threshold: '+ str(save_accuracy))
+            # print('Similarity: ' +str(similarity))
+            # print('message text: ' + str(existing_text))
             return  
     try:
-        print('saving')
         embedding_rounded = np.round(embedding, 8)
         embedding_list = embedding_rounded.tolist()
         user_id = str(user_id)
@@ -189,8 +189,6 @@ async def find_similar_messages(new_text):
     similar_messages = []
     for saved_text, saved_embedding in embeddings_db:
         similarity = cosine_similarity(new_embedding, saved_embedding)
-        print(saved_text)
-        print(similarity)
         if similarity >= search_accuracy:  
             similar_messages.append((saved_text, similarity))
     return similar_messages
@@ -209,7 +207,6 @@ async def delete_embedding_from_db(embedding_text: str):
 
 #<<<<<<<<<<<<<<<<<<<<<<SEARCH BING>>>>>>>>>>>>>>>>>>>>
 async def search_and_extract(query: str) -> str:
-    print('bing')
     num_results: int = 3
     mkt: str = 'uk-UA'
     endpoint = "https://api.bing.microsoft.com/v7.0/search"
@@ -330,7 +327,7 @@ async def delete_embedding_handler(message: Message):
 
 #bitcoin
 @dp.message(F.text.in_({'BTC', 'btc', '/btc', '/btc@ZradaLevelsBot', 'btc@ZradaLevelsBot'}))
-async def btc_command(message: Message):
+async def btc_command(message: Message, bot: Bot):
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT',timeout=15) as resp:
@@ -340,8 +337,16 @@ async def btc_command(message: Message):
                 price = "{:.2f}".format(price)
     except:
         price = 'Спробуй ще разок'
-    await message.answer(text=str(price),reply_markup=None)
+    user_id = message.from_user.id
+    bot_user = await bot.get_me()
+    bot_id = bot_user.id
+    response_text = (
+        f"Ціна {symbol}: {price} USDT\n"
+        f"User ID: {user_id}\n"
+        f"Bot ID: {bot_id}"
+    )
 
+    await message.answer(text=response_text, reply_markup=None)
 
 #bingo
 @dp.message(F.text.in_(bingo_trigger))
@@ -515,10 +520,13 @@ async def bingo_command(message: Message):
 
         
 @dp.message(lambda message: message.reply_to_message and message.reply_to_message.from_user.id == 6694398809)
-async def handle_bot_reply(message: types.Message):
+async def handle_bot_reply(message: types.Message, bot: Bot):
     user_id = message.from_user.id if message.from_user.id else 0
     result = 'немає'
     name = usernames.get(str(user_id), 'невідоме')
+    bot_user = await bot.get_me()
+    bot_id = bot_user.id
+    bot_name = usernames.get(str(bot_id), 'невідоме')
     original_message = message.reply_to_message.text if message.reply_to_message else message.text
     cleaned_message_text = re.sub(r'\bстас\b', '', message.text, flags=re.IGNORECASE).strip()
     cleaned_message_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!,]", "", cleaned_message_text.lower()).strip()
@@ -545,7 +553,7 @@ async def handle_bot_reply(message: types.Message):
         else:
             similar_info = "Схожих повідомленнь немає"
             
-        logging.info(f"схожа інформація є у базі: {similar_info}")
+        # logging.info(f"схожа інформація є у базі: {similar_info}")
        
         if len(cleaned_message_text) > 15  and not any(value in cleaned_message_text for value in question_marks):
             await save_embedding(cleaned_message_text ,embedding, user_id)
@@ -627,6 +635,7 @@ async def handle_bot_reply(message: types.Message):
         else:
             reply = chat_completion.choices[0].message.content
         logging.info(f"Reply to user {user_id}: {reply}")
+        chat_history.append({"role": "assistant", "content":'Попереднє повідомлення - '+bot_name+ ' написав: '+reply})
         await message.answer(reply, reply_markup=None)
     except Exception as e:
         logging.error(e)
@@ -635,12 +644,15 @@ async def handle_bot_reply(message: types.Message):
 
 
 @dp.message(F.text)
-async def random_message(message: Message):
+async def random_message(message: Message,bot: Bot):
     conn = await get_connection()
     cleaned_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", message.text.lower())
     cleaned_message_text = re.sub(r'\bстас\b', '', message.text, flags=re.IGNORECASE).strip()
     cleaned_message_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!,]", "", cleaned_message_text.lower()).strip()
     user_id = message.from_user.id if message.from_user.id else 0
+    bot_user = await bot.get_me()
+    bot_id = bot_user.id
+    bot_name = usernames.get(str(bot_id), 'невідоме')
     name = usernames.get(str(user_id), 'невідоме')
     chat_history.append({"role": "user", "content":'Попереднє повідомлення - '+name+ ' написав: '+ cleaned_message_text})
     
@@ -774,7 +786,6 @@ async def random_message(message: Message):
         logging.info(f"User {user_id} sent message: {message.text}")
         try:
             name = usernames.get(str(user_id), 'невідоме')
-            print(name)
             original_name = usernames.get(str(original_user_id), 'невідоме')
             embedding = generate_embedding(cleaned_message_text)
             similar_messages = await find_similar_messages(embedding)
@@ -783,7 +794,7 @@ async def random_message(message: Message):
             else:
                 similar_info = "Схожих повідомленнь немає"
             
-            logging.info(f"схожа інформація є у базі: {similar_info}")
+            # logging.info(f"схожа інформація є у базі: {similar_info}")
 
             if len(cleaned_message_text) > 15  and not any(value in cleaned_message_text for value in question_marks):
                 await save_embedding(cleaned_message_text, embedding, user_id)
@@ -877,6 +888,7 @@ async def random_message(message: Message):
             else:
                 reply = chat_completion.choices[0].message.content
                 logging.info(f"Reply to user {user_id}: {reply}")
+            chat_history.append({"role": "assistant", "content":'Попереднє повідомлення - '+bot_name+ ' написав: '+reply})
             await message.answer(reply, reply_markup=None)
         except Exception as e:
             logging.error(e)
