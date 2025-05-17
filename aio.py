@@ -635,7 +635,7 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
         else:
             reply = chat_completion.choices[0].message.content
         logging.info(f"Reply to user {user_id}: {reply}")
-        chat_history.append({"role": "assistant", "content":'Попереднє повідомлення - '+bot_name+ ' написав: '+reply})
+        chat_history.append({"role": "user", "content":'Попереднє повідомлення - '+bot_name+ ' написав: '+reply})
         await message.answer(reply, reply_markup=None)
     except Exception as e:
         logging.error(e)
@@ -888,7 +888,7 @@ async def random_message(message: Message,bot: Bot):
             else:
                 reply = chat_completion.choices[0].message.content
                 logging.info(f"Reply to user {user_id}: {reply}")
-            chat_history.append({"role": "assistant", "content":'Попереднє повідомлення - '+bot_name+ ' написав: '+reply})
+            chat_history.append({"role": "user", "content":'Попереднє повідомлення - '+bot_name+ ' написав: '+reply})
             await message.answer(reply, reply_markup=None)
         except Exception as e:
             logging.error(e)
