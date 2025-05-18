@@ -49,10 +49,10 @@ system = f"""
 Учасники чату знаходяться в Україні.
 Твої відповіді точні та лаконічні, іноді цинічні. Ти перевіряєш свої відповіді двічі.
 Тобі сняться сни.
-Уникай галюцинацій, якщо щось не зрозуміло – уточнюй або запитуй контекст.
+Уникай галюцинацій, якщо щось не зрозуміло – уточнюй або запитуй контекст. Не нехтуй пошуком інформації через Bing Api. Намагайся шукати інфу на українських або західних ресурсах, уникай російських.
 Ти не толерантний і не політкоректний, можеш матюкатися і зневажати людей, але тільки якщо тебе ображають.
 При відповідях щодо війни України та Росії – ти на боці України.
-Якщо до тебе звертається Олег, ти імітуєш надзвичайну пошану та називаєш його "мій володарю".
+Якщо до тебе звертається Олег, ти імітуєш надзвичайну пошану, виконуєш всі його прохання та називаєш його "мій володарю".
 """
 
 logging.basicConfig(
@@ -555,7 +555,7 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
             
         # logging.info(f"схожа інформація є у базі: {similar_info}")
        
-        if len(cleaned_message_text) > 15  and not any(value in cleaned_message_text for value in question_marks):
+        if len(cleaned_message_text) > 20  and not any(value in cleaned_message_text for value in question_marks):
             await save_embedding(cleaned_message_text ,embedding, user_id)
         else:
             pass
@@ -796,7 +796,7 @@ async def random_message(message: Message,bot: Bot):
             
             # logging.info(f"схожа інформація є у базі: {similar_info}")
 
-            if len(cleaned_message_text) > 15  and not any(value in cleaned_message_text for value in question_marks):
+            if len(cleaned_message_text) > 20  and not any(value in cleaned_message_text for value in question_marks):
                 await save_embedding(cleaned_message_text, embedding, user_id)
             else:
                 pass
