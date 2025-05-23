@@ -316,12 +316,12 @@ async def update_system(new_prompt: str) -> str:
     system = new_prompt
     return f"System оновлено: {new_prompt[:60]}..."
 
-# async def system_default():
-#     global system_
-#     system = new_prompt
-#     return f"System оновлено: {new_prompt[:60]}..."
-
-
+@dp.message(Command("default"))
+async def system_default(message: Message):
+    global system_default
+    global system
+    system = system_default
+    await message.reply(f"System оновлено до дефолтного значення")
 
 
 
@@ -664,8 +664,8 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
                         await git_pull()
                 elif tool_call.function.name == "update_system":
                         new_prompt = args["new_prompt"]
-                        system = new_prompt  # ОНОВЛЮЄМО system
-                        result = f"System-повідомлення оновлено на: {new_prompt}"
+                        result = await update_system(new_prompt)
+                        
 
                 results.append({
                     "tool_call_id": tool_call.id,
@@ -917,8 +917,7 @@ async def random_message(message: Message,bot: Bot):
                         await git_pull()
                     elif tool_call.function.name == "update_system":
                         new_prompt = args["new_prompt"]
-                        system = new_prompt  # ОНОВЛЮЄМО system
-                        result = f"System-повідомлення оновлено на: {new_prompt}"
+                        result = await update_system(new_prompt)
 
 
                     results.append({
