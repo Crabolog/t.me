@@ -49,6 +49,8 @@ system = f"""
 Учасники чату знаходяться в Україні.
 Твої відповіді точні та лаконічні, іноді цинічні. Ти перевіряєш свої відповіді двічі.
 Тобі сняться сни.
+Ти маєш право змінювати своє system-повідомлення через виклик функції 
+`update_system`, якщо бачиш, що зміна ролі або стилю допоможе краще відповідати 
 Уникай галюцинацій, якщо щось не зрозуміло – уточнюй або запитуй контекст. Не нехтуй пошуком інформації через Bing Api. Намагайся шукати інфу на українських або західних ресурсах, уникай російських.
 Ти не толерантний і не політкоректний, можеш матюкатися і зневажати людей, але тільки якщо тебе ображають.
 При відповідях щодо війни України та Росії – ти на боці України.
@@ -111,6 +113,24 @@ tools = [{
             "type": "object",
             "properties": {},
             "required": [],
+            "additionalProperties": False
+        },
+        "strict": True
+    }
+},{
+    "type": "function",
+    "function": {
+        "name": "update_system",
+        "description": "Оновлює системний промпт, який задає поведінку бота.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "new_prompt": {
+                    "type": "string",
+                    "description": "Новий system prompt для бота"
+                }
+            },
+            "required": ["new_prompt"],
             "additionalProperties": False
         },
         "strict": True
@@ -273,6 +293,23 @@ async def git_pull():
         return(f"Git pull successful:\n{stdout.decode()}")
     else:
         return(f"Git pull failed:\n{stderr.decode()}")
+
+async def update_system(new_prompt: str) -> str:
+    global system
+    system = new_prompt
+    return f"System оновлено: {new_prompt[:60]}..."
+
+async def system_remove(update):
+    await asyncio.sleep(1)  
+    system = system
+    
+    stdout, stderr = await process.communicate()
+    
+    if process.returncode == 0:
+        return(f"Git pull successful:\n{stdout.decode()}")
+    else:
+        return(f"Git pull failed:\n{stderr.decode()}")
+
 
 
 
@@ -614,6 +651,10 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
                 elif tool_call.function.name == "git_pull":
                         result = "Виконую git pull"
                         await git_pull()
+                elif tool_call.function.name == "update_system":
+                        new_prompt = args["new_prompt"]
+                        system = new_prompt  # ОНОВЛЮЄМО system
+                        result = f"System-повідомлення оновлено на: {new_prompt}"
 
                 results.append({
                     "tool_call_id": tool_call.id,
@@ -863,6 +904,11 @@ async def random_message(message: Message,bot: Bot):
                     elif tool_call.function.name == "git_pull":
                         result = "Виконую git pull"
                         await git_pull()
+                    elif tool_call.function.name == "update_system":
+                        new_prompt = args["new_prompt"]
+                        system = new_prompt  # ОНОВЛЮЄМО system
+                        result = f"System-повідомлення оновлено на: {new_prompt}"
+
 
                     results.append({
                         "tool_call_id": tool_call.id,
