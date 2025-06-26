@@ -941,12 +941,16 @@ async def random_message(message: Message,bot: Bot):
         try:
             name = usernames.get(str(user_id), 'невідоме')
             embedding = generate_embedding(cleaned_message_text)
+            logging.info(f"створено: {cleaned_message_text}")
             similar_messages = await find_similar_messages(embedding)
         
             if not similar_messages:
                 if len(cleaned_message_text) > 20 and not any(value in cleaned_message_text for value in question_marks):
-                    print(cleaned_message_text)
+                    logging.info(f"збережено: {cleaned_message_text}")
                     await save_embedding(cleaned_message_text, embedding, user_id)
+            elif similar_messages:
+                logging.info(f"знайдено: {similar_messages}")
+
         except Exception as e:
             await message.answer(f"Ой вей: {e}")
 
