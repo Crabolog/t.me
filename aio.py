@@ -140,7 +140,7 @@ def write_prompt(path: Path, content: str):
 def get_current_system() -> str:
     return read_prompt(SYSTEM_PATH)
 
-system = get_current_system()
+system = lambda: read_prompt(SYSTEM_PATH)
 
 def normalize_l2(x):
     x = np.array(x)
@@ -594,7 +594,7 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
         messages=[
                 {
                     "role": "system", 
-                    "content": system
+                    "content": system()
                 },
                 {
                 "role": "user",
@@ -839,7 +839,7 @@ async def random_message(message: Message,bot: Bot):
             messages=[
                 {
                     "role": "system", 
-                    "content": system
+                    "content": system()
                 },
                 {
                 "role": "user",
