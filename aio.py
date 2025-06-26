@@ -938,6 +938,23 @@ async def random_message(message: Message,bot: Bot):
     elif any(keyword in cleaned_text for keyword in random_keyword):
         await message.answer(random.choice(random_response),reply_markup=None)
 
+    elif 'стас' not in cleaned_text:
+        user_id = message.from_user.id if message.from_user.id else 0
+        cleaned_message_text = re.sub(r'\bстас\b', '', message.text, flags=re.IGNORECASE).strip()
+        cleaned_message_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!,]", "", cleaned_message_text.lower()).strip()
+        query = cleaned_message_text
+        try:
+            name = usernames.get(str(user_id), 'невідоме')
+            embedding = generate_embedding(cleaned_message_text)
+            similar_messages = await find_similar_messages(embedding)
+        
+            if not similar_messages:
+                if len(cleaned_message_text) > 20 and not any(value in cleaned_message_text for value in question_marks):
+                    await save_embedding(cleaned_message_text, embedding, user_id)
+        except Exception as e:
+            pass  # або лог помилки для дебагу
+
+
 
 dp.include_router(router)
 async def main() -> None:
