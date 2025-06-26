@@ -31,8 +31,8 @@ from bs4 import BeautifulSoup
 
 
 bing_api = bing_api
-save_accuracy = 0.7
-search_accuracy = 0.35
+save_accuracy = 0.65
+search_accuracy = 0.32
 max_tokens = 250
 model_name = "gpt-4.1-mini"
 temperature=0.8
