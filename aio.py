@@ -44,7 +44,7 @@ SYSTEM_PATH = Path("system.txt")
 DEFAULT_SYSTEM_PATH = Path("default_system.txt")
 
 
-logging.basicConfig(А
+logging.basicConfig(
     filename="/home/pi/tbot/log.log", 
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
