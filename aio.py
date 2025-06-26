@@ -40,8 +40,9 @@ temperature=0.8
 TOKEN = tel_token
 logging.basicConfig(level=logging.INFO)
 
-SYSTEM_PATH = Path("system.txt")
-DEFAULT_SYSTEM_PATH = Path("default_system.txt")
+BASE_DIR = Path(__file__).parent
+SYSTEM_PATH = BASE_DIR / "system.txt"
+DEFAULT_SYSTEM_PATH = BASE_DIR / "default_system.txt"
 
 
 logging.basicConfig(
