@@ -945,6 +945,7 @@ async def random_message(message: Message,bot: Bot):
         
             if not similar_messages:
                 if len(cleaned_message_text) > 20 and not any(value in cleaned_message_text for value in question_marks):
+                    print(cleaned_message_text)
                     await save_embedding(cleaned_message_text, embedding, user_id)
         except Exception as e:
             await message.answer(f"Ой вей: {e}")
