@@ -653,7 +653,7 @@ async def random_message(message: Message,bot: Bot):
             embedding = generate_embedding(cleaned_message_text)
             logging.info(f"створено: {cleaned_message_text}")
 
-            if len(cleaned_message_text) > 16 and not any(value in cleaned_message_text for value in question_marks):
+            if len(cleaned_message_text) > 20 and not any(value in cleaned_message_text for value in question_marks):
                 logging.info(f"збережено: {cleaned_message_text}")
                 await save_embedding(cleaned_message_text, embedding, user_id)
             else:
