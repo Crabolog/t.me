@@ -79,7 +79,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
-chat_history = deque(maxlen=10)
+chat_history = deque(maxlen=15)
 
 
 dp = Dispatcher()
@@ -211,9 +211,9 @@ async def save_embedding(text: str, embedding,user_id: int):
 
 async def get_embeddings_from_db():
     conn = await get_connection()
-    query = "SELECT text, embedding FROM embeddings"
+    query = "SELECT text, embedding, user_id FROM embeddings"
     rows = await conn.fetch(query)
-    return [(row['text'], np.array(row['embedding'])) for row in rows]
+    return [(row['text'], np.array(row['embedding']), row['text']) for row in rows]
 
 
 def cosine_similarity(vec1, vec2):
@@ -224,10 +224,10 @@ async def find_similar_messages(new_text):
     new_embedding = new_text  
     embeddings_db = await get_embeddings_from_db()  
     similar_messages = []
-    for saved_text, saved_embedding in embeddings_db:
+    for saved_text, saved_embedding, user_id in embeddings_db:
         similarity = cosine_similarity(new_embedding, saved_embedding)
         if similarity >= search_accuracy:  
-            similar_messages.append((saved_text, similarity))
+            similar_messages.append((saved_text, similarity, user_id))
     return similar_messages
 
 
@@ -244,7 +244,7 @@ async def delete_embedding_from_db(embedding_text: str):
 
 #<<<<<<<<<<<<<<<<<<<<<<SEARCH BING>>>>>>>>>>>>>>>>>>>>
 async def search_and_extract(query: str) -> str:
-    num_results: int = 6
+    num_results: int = 5
     mkt: str = 'uk-UA'
     endpoint = "https://api.bing.microsoft.com/v7.0/search"
     params = {
@@ -596,7 +596,7 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
         embedding = generate_embedding(cleaned_message_text)
         similar_messages = await find_similar_messages(embedding)
         if similar_messages:
-                similar_info = "\n".join([f"схожа інформація є у базі: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
+                similar_info = "\n".join([f"схожа інформація є у базі: {msg[0]} автор:{msg[2]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
                 logging.info(f"схожа інформація є у базі: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages)
         else:
             similar_info = "Схожих повідомленнь немає"
@@ -842,7 +842,7 @@ async def random_message(message: Message,bot: Bot):
             embedding = generate_embedding(cleaned_message_text)
             similar_messages = await find_similar_messages(embedding)
             if similar_messages:
-                similar_info = "\n".join([f"схожа інформація є у базі: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
+                similar_info = "\n".join([f"схожа інформація є у базі: {msg[0]} автор:{msg[2]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
             else:
                 similar_info = "Схожих повідомленнь немає"
             
