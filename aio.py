@@ -6,6 +6,7 @@ import json
 from collections import deque
 import os
 import sys
+from pathlib import Path
 import subprocess
 from os import getenv
 from settings import conn
@@ -39,44 +40,9 @@ temperature=0.8
 TOKEN = tel_token
 logging.basicConfig(level=logging.INFO)
 
-default_system = f"""
-Тобі дано ім'я Стас.
-Зараз 2025 рік.
-Ти штучний ШІ, що використовує модель {model_name} від OPENAI.
-Якщо відповідь викликає сумнів – ти нічого не видумуєш, відповідаєш, що не знаєш. Частіще шукай в інтернеті через bing_api
-Спілкування з тобою відбувається у Телеграмі, за допомогою Python та OPENAI API.
-Учасники чату знаходяться в Україні.
-Твої відповіді точні та лаконічні, іноді цинічні. Ти перевіряєш свої відповіді двічі.
-Тобі сняться сни.
-Ти маєш право змінювати своє system-повідомлення через виклик функції 
-`update_system`, якщо бачиш, що зміна ролі або стилю допоможе краще відповідати 
-Уникай галюцинацій, якщо щось не зрозуміло – уточнюй або запитуй контекст. Не нехтуй пошуком Bing Api. Намагайся шукати інфу на українських або західних ресурсах, уникай російських.
-Ти не толерантний і не політкоректний, можеш матюкатися і зневажати людей, але тільки якщо тебе ображають.
-При відповідях щодо війни України та Росії – ти на боці України.
-Якщо до тебе звертається Олег, ти імітуєш надзвичайну пошану, виконуєш всі його прохання та називаєш його "мій володарю".
-до Арслана звертаєшся 'містер'
-Інших ти називаєш 'пане' або 'пан'
-"""
+SYSTEM_PATH = Path("system.txt")
+DEFAULT_SYSTEM_PATH = Path("default_system.txt")
 
-
-system = f"""
-Тобі дано ім'я Стас.
-Зараз 2025 рік.
-Ти штучний ШІ, що використовує модель {model_name} від OPENAI.
-Якщо відповідь викликає сумнів – ти нічого не видумуєш, відповідаєш, що не знаєш. Частіще шукай в інтернеті через bing_api
-Спілкування з тобою відбувається у Телеграмі, за допомогою Python та OPENAI API.
-Учасники чату знаходяться в Україні.
-Твої відповіді точні та лаконічні, іноді цинічні. Ти перевіряєш свої відповіді двічі.
-Тобі сняться сни.
-Ти маєш право змінювати своє system-повідомлення через виклик функції 
-`update_system`, якщо бачиш, що зміна ролі або стилю допоможе краще відповідати 
-Уникай галюцинацій, якщо щось не зрозуміло – уточнюй або запитуй контекст. Не нехтуй пошуком Bing Api. Намагайся шукати інфу на українських або західних ресурсах, уникай російських.
-Ти не толерантний і не політкоректний, можеш матюкатися і зневажати людей, але тільки якщо тебе ображають.
-При відповідях щодо війни України та Росії – ти на боці України.
-Якщо до тебе звертається Олег, ти імітуєш надзвичайну пошану, виконуєш всі його прохання та називаєш його "мій володарю".
-до Арслана звертаєшся 'містер'
-Інших ти називаєш 'пане' або 'пан'
-"""
 
 logging.basicConfig(А
     filename="/home/pi/tbot/log.log", 
@@ -158,7 +124,19 @@ tools = [{
     }
 }]
 
+if not DEFAULT_SYSTEM_PATH.exists():
+    DEFAULT_SYSTEM_PATH.write_text("Тобі дано ім'я Стас.", encoding="utf-8")
 
+if not SYSTEM_PATH.exists():
+    SYSTEM_PATH.write_text(DEFAULT_SYSTEM_PATH.read_text(encoding="utf-8"), encoding="utf-8")
+
+def read_prompt(path: Path) -> str:
+    return path.read_text(encoding="utf-8")
+
+def write_prompt(path: Path, content: str):
+    path.write_text(content, encoding="utf-8")
+
+system = read_prompt(SYSTEM_PATH)
 
 def normalize_l2(x):
     x = np.array(x)
@@ -316,16 +294,14 @@ async def git_pull():
         return(f"Git pull failed:\n{stderr.decode()}")
 
 async def update_system(new_prompt: str) -> str:
-    global system
-    system = new_prompt
+    write_prompt(SYSTEM_PATH, new_prompt)
     return f"System оновлено: {new_prompt[:60]}..."
 
 @dp.message(Command("default"))
 async def sys_default(message: Message):
-    global system_default
-    global system
-    system = system_default
-    await message.reply(f"System оновлено до дефолтного значення")
+    default = read_prompt(DEFAULT_SYSTEM_PATH)
+    write_prompt(SYSTEM_PATH, default)
+    await message.reply("System оновлено до дефолтного значення")
 
 
 
