@@ -166,7 +166,7 @@ def generate_embedding(text: str):
 async def save_embedding_to_db(text: str, embedding: np.ndarray, user_id: int):
     conn = await get_connection() 
     existing_embeddings = await get_embeddings_from_db()
-    for existing_text, existing_embedding in existing_embeddings:
+    for existing_text, existing_embedding, existing_user_id in existing_embeddings:
         similarity = cosine_similarity(embedding, existing_embedding)
         if similarity >= save_accuracy:
             # print('similar vector found')
@@ -209,10 +209,10 @@ async def find_similar_messages(new_text):
     new_embedding = new_text  
     embeddings_db = await get_embeddings_from_db()  
     similar_messages = []
-    for saved_text, saved_embedding, user_id in embeddings_db:
+    for saved_text, saved_embedding, saved_user_id in embeddings_db:
         similarity = cosine_similarity(new_embedding, saved_embedding)
         if similarity >= search_accuracy:  
-            similar_messages.append((saved_text, similarity, user_id))
+            similar_messages.append((saved_text, similarity, saved_user_id))
     return similar_messages
 
 
