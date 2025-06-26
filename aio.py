@@ -580,7 +580,7 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
         embedding = generate_embedding(cleaned_message_text)
         similar_messages = await find_similar_messages(embedding)
         if similar_messages:
-                similar_info = "\n".join([f"схожа інформація є у базі: {msg[0]} автор:{msg[2]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
+                similar_info = "\n".join([f"схожа інформація є у базі: {msg[0]} автор:{usernames.get(str(msg[2]), 'невідоме')} (схожість: {msg[1]:.2f})" for msg in similar_messages])
                 logging.info(f"схожа інформація є у базі: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages)
         else:
             similar_info = "Схожих повідомленнь немає"
@@ -826,7 +826,7 @@ async def random_message(message: Message,bot: Bot):
             embedding = generate_embedding(cleaned_message_text)
             similar_messages = await find_similar_messages(embedding)
             if similar_messages:
-                similar_info = "\n".join([f"схожа інформація є у базі: {msg[0]} автор:{msg[2]} (схожість: {msg[1]:.2f})" for msg in similar_messages])
+                similar_info = "\n".join([f"схожа інформація є у базі: {msg[0]} автор:{usernames.get(str(msg[2]), 'невідоме')} (схожість: {msg[1]:.2f})" for msg in similar_messages])
             else:
                 similar_info = "Схожих повідомленнь немає"
             
