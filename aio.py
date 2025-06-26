@@ -139,7 +139,7 @@ def write_prompt(path: Path, content: str):
 def get_current_system() -> str:
     return read_prompt(SYSTEM_PATH)
 
-prompt = get_current_system()
+system = get_current_system()
 
 def normalize_l2(x):
     x = np.array(x)
