@@ -574,18 +574,25 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
         name = usernames.get(str(user_id), 'невідоме')
         embedding = generate_embedding(cleaned_message_text)
         similar_messages = await find_similar_messages(embedding)
-        if similar_messages:
-                similar_info = "\n".join([f"схожа інформація є у базі: {msg[0]} автор:{usernames.get(str(msg[2]), 'невідоме')} (схожість: {msg[1]:.2f})" for msg in similar_messages])
-                logging.info(f"схожа інформація є у базі: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages)
+
+        has_similar = any(sim[1] >= search_accuracy for sim in similar_messages)
+
+        if not has_similar:
+            if len(cleaned_message_text) > 20 and not any(value in cleaned_message_text for value in question_marks):
+                await save_embedding(cleaned_message_text, embedding, user_id)
+            similar_info = "Схожих повідомлень немає"
+
         else:
-            similar_info = "Схожих повідомленнь немає"
-            
-        # logging.info(f"схожа інформація є у базі: {similar_info}")
+            similar_info = "\n".join([
+                f"схожа інформація є у базі: {msg[0]} автор: {usernames.get(str(msg[2]), 'невідоме')} (схожість: {msg[1]:.2f})"
+                for msg in similar_messages if msg[1] >= search_accuracy
+                ])
+        for msg in similar_messages:
+            if msg[1] >= search_accuracy:
+                logging.info(f"схожа інформація: {msg[0]} (схожість: {msg[1]:.2f})")
+
        
-        if len(cleaned_message_text) > 20  and not any(value in cleaned_message_text for value in question_marks):
-            await save_embedding(cleaned_message_text ,embedding, user_id)
-        else:
-            pass
+        
         messages=[
                 {
                     "role": "system", 
@@ -935,24 +942,36 @@ async def random_message(message: Message,bot: Bot):
 
     elif 'стас' not in cleaned_text:
         user_id = message.from_user.id if message.from_user.id else 0
+
+    # Очищення тексту
         cleaned_message_text = re.sub(r'\bстас\b', '', message.text, flags=re.IGNORECASE).strip()
         cleaned_message_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!,]", "", cleaned_message_text.lower()).strip()
         query = cleaned_message_text
+
         try:
             name = usernames.get(str(user_id), 'невідоме')
             embedding = generate_embedding(cleaned_message_text)
             logging.info(f"створено: {cleaned_message_text}")
+
             similar_messages = await find_similar_messages(embedding)
-        
-            if not similar_messages:
+
+            has_similar = any(sim[1] >= search_accuracy for sim in similar_messages)
+
+            if not has_similar:
                 if len(cleaned_message_text) > 20 and not any(value in cleaned_message_text for value in question_marks):
                     logging.info(f"збережено: {cleaned_message_text}")
                     await save_embedding(cleaned_message_text, embedding, user_id)
-            elif similar_messages:
-                logging.info(f"знайдено: {similar_messages}")
+                else:
+                    logging.info("не збережено — короткий текст або є питання")
+            else:
+                for msg in similar_messages:
+                    if msg[1] >= search_accuracy:
+                        logging.info(f"знайдено схоже: {msg[0]} (схожість: {msg[1]:.2f})")
 
         except Exception as e:
             await message.answer(f"Ой вей: {e}")
+
+
 
 
 dp.include_router(router)
