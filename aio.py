@@ -136,7 +136,10 @@ def read_prompt(path: Path) -> str:
 def write_prompt(path: Path, content: str):
     path.write_text(content, encoding="utf-8")
 
-system = read_prompt(SYSTEM_PATH)
+def get_current_system() -> str:
+    return read_prompt(SYSTEM_PATH)
+
+prompt = get_current_system()
 
 def normalize_l2(x):
     x = np.array(x)
@@ -195,7 +198,7 @@ async def get_embeddings_from_db():
     conn = await get_connection()
     query = "SELECT text, embedding, user_id FROM embeddings"
     rows = await conn.fetch(query)
-    return [(row['text'], np.array(row['embedding']), row['text']) for row in rows]
+    return [(row['text'], np.array(row['embedding']), row['user_id']) for row in rows]
 
 
 def cosine_similarity(vec1, vec2):
