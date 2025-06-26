@@ -544,7 +544,7 @@ async def random_message(message: Message,bot: Bot):
 
             # logging.info(f"схожа інформація є у базі: {similar_info}")
 
-            if len(cleaned_message_text) > 16  and not any(value in cleaned_message_text for value in question_marks):
+            if len(cleaned_message_text) > 20  and not any(value in cleaned_message_text for value in question_marks):
                 await save_embedding(cleaned_message_text, embedding, user_id)
             else:
                 pass
