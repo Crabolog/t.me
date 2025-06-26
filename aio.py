@@ -28,14 +28,12 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 import numpy as np
 from bs4 import BeautifulSoup
 
-
-
-bing_api = bing_api
 save_accuracy = 0.65
-search_accuracy = 0.32
+search_accuracy = 0.31
 max_tokens = 250
 model_name = "gpt-4.1-mini"
-temperature=0.8
+temperature = 0.8
+chat_history = deque(maxlen=15)
 
 TOKEN = tel_token
 logging.basicConfig(level=logging.INFO)
@@ -49,9 +47,7 @@ logging.basicConfig(
     filename="/home/pi/tbot/log.log", 
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
-)
-chat_history = deque(maxlen=15)
-
+    )
 
 dp = Dispatcher()
 router = Router()
@@ -60,8 +56,7 @@ cursor = conn.cursor()
 openai.api_key = OPENAI_API_KEY
 client = OpenAI(
     api_key=OPENAI_API_KEY
-)
-
+    )
 
 
 tools = [{
@@ -890,7 +885,7 @@ async def random_message(message: Message,bot: Bot):
                 for tool_call in tool_calls:
                     args = json.loads(tool_call.function.arguments)
 
-                    # Выполняем соответствующую функцию
+
                     if tool_call.function.name == "search_and_extract":
                         result = await search_and_extract(args["query"])
                     elif tool_call.function.name == "reboot_pi":
@@ -952,8 +947,7 @@ async def random_message(message: Message,bot: Bot):
                 if len(cleaned_message_text) > 20 and not any(value in cleaned_message_text for value in question_marks):
                     await save_embedding(cleaned_message_text, embedding, user_id)
         except Exception as e:
-            pass  # або лог помилки для дебагу
-
+            await message.answer(f"Ой вей: {e}")
 
 
 dp.include_router(router)
