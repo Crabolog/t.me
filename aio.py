@@ -480,7 +480,7 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
                         response = openai.images.generate(
                             model="dall-e-2",
                             prompt=prompt,
-                            size="256x256",
+                            size="512×512",
                             n=1
                         )
                         image_url = response.data[0].url
@@ -642,7 +642,7 @@ async def random_message(message: Message,bot: Bot):
                         response = openai.images.generate(
                             model="dall-e-2",
                             prompt=prompt,
-                            size="256x256",
+                            size="512×512",
                             n=1)
                         image_url = response.data[0].url
                         await message.answer_photo(photo=image_url, caption=f"Зображення за запитом: {prompt}")
