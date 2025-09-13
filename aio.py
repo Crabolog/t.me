@@ -10,7 +10,8 @@ from pathlib import Path
 import subprocess
 from os import getenv
 from settings import conn
-from settings import *
+from settings import  *
+from settings import  SERP_API_KEY
 from dict import *
 import datetime
 import time
@@ -31,7 +32,7 @@ from bs4 import BeautifulSoup
 save_accuracy = 0.65
 search_accuracy = 0.33
 max_tokens = 250
-model_name = "gpt-4.1-mini"
+model_name = "gpt-5-mini"
 temperature = 0.8
 chat_history = deque(maxlen=15)
 
@@ -60,20 +61,23 @@ client = OpenAI(
 
 
 tools = [{
-    "type": "function",
-    "function": {
-        "name": "search_and_extract",
-        "description": "Asynchronously searches for information using Bing API",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "query": {"type": "string"}
-            },
-            "required": ["query"],
-            "additionalProperties": False
-        },
-        "strict": True
-    }
+  "type": "function",
+  "function": {
+    "name": "search_and_extract",
+    "description": "Asynchronously searches for information using SerpAPI (Google Search API)",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The search query string"
+        }
+      },
+      "required": ["query"],
+      "additionalProperties": False
+    },
+    "strict": True
+  }
 }, {
     "type": "function",
     "function": {
@@ -118,6 +122,22 @@ tools = [{
         },
         "strict": True
     }
+},
+{
+  "type": "function",
+  "function": {
+    "name": "generate_image",
+    "description": "Генерує зображення за описом",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "prompt": {"type": "string"}
+      },
+      "required": ["prompt"],
+      "additionalProperties": False
+    },
+    "strict": True
+  }
 }]
 
 if not DEFAULT_SYSTEM_PATH.exists():
@@ -229,54 +249,40 @@ async def delete_embedding_from_db(embedding_text: str):
 
 
 # <<<<<<<<<<<<<<<<<<<<<<SEARCH BING>>>>>>>>>>>>>>>>>>>>
-async def search_and_extract(query: str) -> str:
-    num_results: int = 5
-    mkt: str = 'uk-UA'
-    endpoint = "https://api.bing.microsoft.com/v7.0/search"
+async def search_and_extract(query: str, num_results: int = 5) -> str:
+    endpoint = "https://serpapi.com/search"
     params = {
-        'q': query,
-        'mkt': mkt,
-        'count': num_results
-        }
-    headers = {
-        'Ocp-Apim-Subscription-Key': bing_api 
-        }
+        "q": query,
+        "hl": "uk",
+        "gl": "ua",
+        "num": num_results,
+        "api_key": SERP_API_KEY,
+    }
 
     async with aiohttp.ClientSession() as session:
-        async with session.get(endpoint, params=params, headers=headers) as response:
+        async with session.get(endpoint, params=params) as response:
             if response.status != 200:
-                return f"Помилка Bing API: Код {response.status}"
+                return f"Помилка SerpAPI: Код {response.status}"
 
             results = await response.json()
 
-        if 'webPages' not in results or 'value' not in results['webPages']:
+        if 'organic_results' not in results:
             return "Результатів не знайдено"
 
         formatted_results = []
-        for item in results['webPages']['value'][:num_results]:
-            name = item.get('name', 'Без назви')
-            url = item.get('url', 'Без URL')
+        for item in results['organic_results'][:num_results]:
+            name = item.get('title', 'Без назви')
+            url = item.get('link', 'Без URL')
             snippet = item.get('snippet', 'Опис відсутній')
 
-            try:
-                async with session.get(url, timeout=10) as page_response:
-                    if page_response.status == 200:
-                        html = await page_response.text()
-                        soup = BeautifulSoup(html, 'html.parser')
-                        paragraphs = soup.find_all('p')
-                        main_text = "\n".join([p.get_text(strip=True) for p in paragraphs])[:750]
-                    else:
-                        main_text = f"Помилка сторінки: Код {page_response.status}"
-            except Exception as e:
-                logging.error(e)
-                main_text = f"Помилка: {e}"
+            # можно додати текст але це довго
+            main_text = ""  # через BeautifulSoup
 
             formatted_results.append(
                 f"Назва: {name}\nURL: {url}\nОпис: {snippet}\nТекст:\n{main_text}\n"
             )
 
         return "\n".join(formatted_results)
-
 
 async def reboot_pi():
     await asyncio.sleep(3)  
@@ -450,12 +456,15 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
 
         tool_calls = chat_completion.choices[0].message.tool_calls
         if tool_calls:
+            print(123)
             results = []
             messages.append(chat_completion.choices[0].message)
             for tool_call in tool_calls:
                 args = json.loads(tool_call.function.arguments)
                 if tool_call.function.name == "search_and_extract":
                     result = await search_and_extract(args["query"])
+                    print(1234)
+                    print(result)
                 elif tool_call.function.name == "reboot_pi":
                     result = "Відбувається перезавантаження"
                     await reboot_pi()
@@ -465,11 +474,25 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
                 elif tool_call.function.name == "update_system":
                     new_prompt = args["new_prompt"]
                     result = await update_system(new_prompt)
-
-                results.append({
-                    "tool_call_id": tool_call.id,
-                    "content": result
-                })
+                elif tool_call.function.name == "generate_image":
+                    prompt = args.get("prompt", "")
+                    try:
+                        response = openai.images.generate(
+                            model="dall-e-2",
+                            prompt=prompt,
+                            size="256x256",
+                            n=1
+                        )
+                        image_url = response.data[0].url
+                        await message.answer_photo(photo=image_url, caption=f"Зображення за запитом: {prompt}")
+                        result = "123"  # чтобы не добавлять текст в messages
+                    except Exception as e:
+                        result = f"Помилка генерації зображення: {e}"
+                if result is not None:
+                    results.append({
+                        "tool_call_id": tool_call.id,
+                        "content": result
+                    })
             for result in results:
                 messages.append({
                     "role": "tool",
@@ -530,7 +553,9 @@ async def random_message(message: Message,bot: Bot):
 
         if any(keyword in cleaned_text for keyword in search_keywords):
             query = re.sub(r'\b(стас|поиск|пошук|погугли|гугл)\b', '', message.text, flags=re.IGNORECASE).strip()
+            print(message.text)
             result = await search_and_extract(query)
+            print(result)
         logging.info(f"User {user_id} sent message: {message.text}")
         try:
             name = usernames.get(str(user_id), 'невідоме')
@@ -611,11 +636,25 @@ async def random_message(message: Message,bot: Bot):
                     elif tool_call.function.name == "update_system":
                         new_prompt = args["new_prompt"]
                         result = await update_system(new_prompt)
+                    elif tool_call.function.name == "generate_image":
+                        prompt = args.get("prompt", "")
+                    try:
+                        response = openai.images.generate(
+                            model="dall-e-2",
+                            prompt=prompt,
+                            size="256x256",
+                            n=1)
+                        image_url = response.data[0].url
+                        await message.answer_photo(photo=image_url, caption=f"Зображення за запитом: {prompt}")
+                        result = "123"  
+                    except Exception as e:
+                        result = f"Помилка генерації зображення: {e}"
 
-                    results.append({
+                    if result is not None:
+                        results.append({
                         "tool_call_id": tool_call.id,
                         "content": result
-                    })
+                        })
 
                 for result in results:
                     messages.append({
