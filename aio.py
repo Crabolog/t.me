@@ -31,8 +31,8 @@ from bs4 import BeautifulSoup
 
 save_accuracy = 0.65
 search_accuracy = 0.33
-max_completion_tokens = 250
-model_name = "gpt-5-mini"
+max_tokens = 250
+model_name = "gpt-4.1-mini"
 temperature = 0.8
 chat_history = deque(maxlen=15)
 
@@ -450,7 +450,7 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
         messages=messages,
         model=model_name,
         temperature=temperature,
-        max_completion_tokens= max_completion_tokens,
+        max_tokens= max_tokens,
         tools=tools
         )
 
@@ -612,7 +612,7 @@ async def random_message(message: Message,bot: Bot):
                 messages=messages,
                 model=model_name,
                 temperature=temperature,
-                max_completion_tokens= max_completion_tokens,
+                max_tokens= max_tokens,
                 tools=tools
                 )
 
