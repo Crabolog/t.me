@@ -2,3 +2,5 @@ dbtest.*
 settings.*
 **/__pycache__/
 test.*
+default_system.txt
+system.txt
