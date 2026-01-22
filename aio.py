@@ -45,7 +45,7 @@ DEFAULT_SYSTEM_PATH = BASE_DIR / "default_system.txt"
 
 
 logging.basicConfig(
-    filename="/home/pi/tbot/log.log", 
+    filename="/home/pi/tbot/log.log",
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     )
@@ -184,7 +184,7 @@ def generate_embedding(text: str):
 
 
 async def save_embedding_to_db(text: str, embedding: np.ndarray, user_id: int):
-    conn = await get_connection() 
+    conn = await get_connection()
     existing_embeddings = await get_embeddings_from_db()
     for existing_text, existing_embedding, existing_user_id in existing_embeddings:
         similarity = cosine_similarity(embedding, existing_embedding)
@@ -193,13 +193,13 @@ async def save_embedding_to_db(text: str, embedding: np.ndarray, user_id: int):
             # print('threshold: '+ str(save_accuracy))
             # print('Similarity: ' +str(similarity))
             # print('message text: ' + str(existing_text))
-            return  
+            return
     try:
         embedding_rounded = np.round(embedding, 8)
         embedding_list = embedding_rounded.tolist()
         user_id = str(user_id)
         query = """
-        INSERT INTO embeddings (text, embedding, user_id) 
+        INSERT INTO embeddings (text, embedding, user_id)
         VALUES ($1, $2::FLOAT8[], $3)
         """
         await conn.execute(query, text, embedding_list, user_id)
@@ -226,12 +226,12 @@ def cosine_similarity(vec1, vec2):
 
 
 async def find_similar_messages(new_text):
-    new_embedding = new_text  
+    new_embedding = new_text
     embeddings_db = await get_embeddings_from_db()
     similar_messages = []
     for saved_text, saved_embedding, saved_user_id in embeddings_db:
         similarity = cosine_similarity(new_embedding, saved_embedding)
-        if similarity >= search_accuracy:  
+        if similarity >= search_accuracy:
             similar_messages.append((saved_text, similarity, saved_user_id))
     return similar_messages
 
@@ -285,13 +285,13 @@ async def search_and_extract(query: str, num_results: int = 5) -> str:
         return "\n".join(formatted_results)
 
 async def reboot_pi():
-    await asyncio.sleep(3)  
+    await asyncio.sleep(3)
     process = await asyncio.create_subprocess_shell("sudo shutdown -r now")
     await process.communicate()
 
 
 async def git_pull():
-    await asyncio.sleep(3)  
+    await asyncio.sleep(3)
     repo_path = "/home/pi/tbot"  # Change this to your actual repository path
     process = await asyncio.create_subprocess_shell(
         f"cd {repo_path} && sudo git pull tbot master",
@@ -324,7 +324,7 @@ async def delete_embedding_handler(message: Message):
     args = text.split(maxsplit=1)
 
     if len(args) > 1:
-        embedding_text = args[1]  
+        embedding_text = args[1]
         deleted = await delete_embedding_from_db(embedding_text)
 
         if deleted:
@@ -389,7 +389,7 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
     chat_history.append({"role": "user", "content":'Попереднє повідомлення - '+name+ ' написав: '+cleaned_message_text})
     if not original_message and message.reply_to_message:
         if message.reply_to_message.caption:
-                original_message = message.reply_to_message.caption  
+                original_message = message.reply_to_message.caption
         else:
             original_message = "Переслане повідомлення без тексту"
 
@@ -518,7 +518,7 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
         await message.answer(f"Ой вей: {e}")
 
 
-@dp.message(F.text) 
+@dp.message(F.text)
 async def random_message(message: Message,bot: Bot):
     conn = await get_connection()
     cleaned_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!?,]", "", message.text.lower())
@@ -575,7 +575,7 @@ async def random_message(message: Message,bot: Bot):
                 pass
             messages = [
                 {
-                    "role": "system", 
+                    "role": "system",
                     "content": system()
                 },
                 {
@@ -596,7 +596,7 @@ async def random_message(message: Message,bot: Bot):
                 },
                 {
                     "role": "user",
-                    "content": similar_info,  
+                    "content": similar_info,
                 },
                 {
                     "role": "user",
@@ -646,7 +646,7 @@ async def random_message(message: Message,bot: Bot):
                             n=1)
                         image_url = response.data[0].url
                         await message.answer_photo(photo=image_url, caption=f"Зображення за запитом: {prompt}")
-                        result = "123"  
+                        result = "123"
                     except Exception as e:
                         result = f"Помилка генерації зображення: {e}"
 
@@ -683,26 +683,24 @@ async def random_message(message: Message,bot: Bot):
     elif any(keyword in cleaned_text for keyword in random_keyword):
         await message.answer(random.choice(random_response),reply_markup=None)
 
-    elif 'стас' not in cleaned_text:
-        user_id = message.from_user.id if message.from_user.id else 0
-        cleaned_message_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!,]", "", cleaned_message_text.lower()).strip()
+    # elif 'стас' not in cleaned_text:
+    #     user_id = message.from_user.id if message.from_user.id else 0
+    #     cleaned_message_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!,]", "", cleaned_message_text.lower()).strip()
+    #     if len(cleaned_message_text) > 50 and not any(value in cleaned_message_text for value in question_marks):
 
-        try:
-            name = usernames.get(str(user_id), 'невідоме')
-            embedding = generate_embedding(cleaned_message_text)
-            logging.info(f"створено: {cleaned_message_text}")
-
-            if len(cleaned_message_text) > 20 and not any(value in cleaned_message_text for value in question_marks):
-                logging.info(f"збережено: {cleaned_message_text}")
-                await save_embedding(cleaned_message_text, embedding, user_id)
-            else:
-                logging.info("не збережено — короткий текст або є питання")
-
-        except Exception as e:
-            await message.answer(f"Ой вей: {e}")
+    #         try:
+    #             name = usernames.get(str(user_id), 'невідоме')
+    #             embedding = generate_embedding(cleaned_message_text)
+    #             logging.info(f"створено: {cleaned_message_text}")
+    #             logging.info(f"збережено: {cleaned_message_text}")
+    #             await save_embedding(cleaned_message_text, embedding, user_id)
+    #         except Exception as e:
+    #             await message.answer(f"Ой вей: {e}")
 
 
 dp.include_router(router)
+
+
 async def main() -> None:
 
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
