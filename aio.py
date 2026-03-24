@@ -161,6 +161,7 @@ def get_current_system() -> str:
 
 system = lambda: read_prompt(SYSTEM_PATH)
 
+
 def normalize_l2(x):
     x = np.array(x)
     if x.ndim == 1:
@@ -345,15 +346,13 @@ async def btc_command(message: Message, bot: Bot):
                 symbol = data['symbol']
                 price = float(data['price'])
                 price = "{:.2f}".format(price)
-    except:
+    except Exception:
         price = 'Спробуй ще разок'
     user_id = message.from_user.id
     bot_user = await bot.get_me()
     bot_id = bot_user.id
     response_text = (
         f"Ціна {symbol}: {price} USDT\n"
-        f"User ID: {user_id}\n"
-        f"Bot ID: {bot_id}"
         )
 
     await message.answer(text=response_text, reply_markup=None)
@@ -377,27 +376,24 @@ async def roll_command(message: Message):
 
 @dp.message(lambda message: message.reply_to_message and message.reply_to_message.from_user.id == 6694398809)
 async def handle_bot_reply(message: types.Message, bot: Bot):
+
     user_id = message.from_user.id if message.from_user.id else 0
-    result = 'немає'
-    name = usernames.get(str(user_id), 'невідоме')
+  
     bot_user = await bot.get_me()
     bot_id = bot_user.id
     bot_name = usernames.get(str(bot_id), 'невідоме')
+    
     original_message = message.reply_to_message.text if message.reply_to_message else message.text
     cleaned_message_text = re.sub(r'\bстас\b', '', message.text, flags=re.IGNORECASE).strip()
     cleaned_message_text = re.sub(r"[-()\"#/@;:<>{}`+=~|.!,]", "", cleaned_message_text.lower()).strip()
-    chat_history.append({"role": "user", "content":'Попереднє повідомлення - '+name+ ' написав: '+cleaned_message_text})
+
+
+
     if not original_message and message.reply_to_message:
         if message.reply_to_message.caption:
                 original_message = message.reply_to_message.caption
         else:
             original_message = "Переслане повідомлення без тексту"
-
-    logging.info(f"User {user_id} sent message: {message.text}")
-
-    if any(keyword in cleaned_message_text for keyword in search_keywords):
-        query = re.sub(r'\b(стас|поиск|пошук|погугли|гугл)\b', '', message.text, flags=re.IGNORECASE).strip()
-        result = await search_and_extract(query)
 
     try:
         name = usernames.get(str(user_id), 'невідоме')
