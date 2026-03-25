@@ -175,7 +175,7 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
                 # },
                 {
                     "role": "user",
-                    "content": f"{name}: {cleaned_message_text}"
+                    "content": f"{cleaned_message_text}"
                 }
             ]
 
@@ -219,15 +219,14 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
 
         chat_history.append({
             "role": "user",
-            "content": f"{name}: {cleaned_message_text}"
+            "content": f"{cleaned_message_text}"
         })
 
         chat_history.append({
             "role": "assistant",
-            "content": f"{bot_name}: {reply}"
+            "content": f"{reply}"
         })
-        for item in chat_history:
-            print(item)
+
     except Exception as e:
         logging.error(e)
         await message.answer(f"Ой вей: {e}")
@@ -252,7 +251,7 @@ async def random_message(message: Message, bot: Bot):
 
     chat_history.append({
         "role": "user",
-        "content": f"{name}: {cleaned_message_text}"
+        "content": f"{cleaned_message_text}"
     })
 
     if any(keyword in cleaned_text for keyword in bmw):
@@ -306,7 +305,7 @@ async def random_message(message: Message, bot: Bot):
                 },
                 {
                     "role": "user",
-                    "content": f"{name}: {cleaned_message_text}"
+                    "content": f"{cleaned_message_text}"
                 },
                 {
                     "role": "user",
@@ -362,10 +361,9 @@ async def random_message(message: Message, bot: Bot):
 
             chat_history.append({
                 "role": "assistant",
-                "content": f"{bot_name}: {reply}"
+                "content": f"{reply}"
             })
-            for item in chat_history:
-                print(item)
+         
         except Exception as e:
             logging.error(e)
             await message.answer(f"Ой вей: {e}")
