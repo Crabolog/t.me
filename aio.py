@@ -175,6 +175,10 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
                 # },
                 {
                     "role": "user",
+                    "content": "імя співрозмовника: " + name
+                },
+                {
+                    "role": "user",
                     "content": f"{cleaned_message_text}"
                 }
             ]
@@ -302,6 +306,10 @@ async def random_message(message: Message, bot: Bot):
                 {
                     "role": "user",
                     "content": "Автор пересланого повідомлення: " + original_name,
+                },
+                {
+                    "role": "user",
+                    "content": "імя співрозмовника: " + name
                 },
                 {
                     "role": "user",
