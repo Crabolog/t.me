@@ -4,3 +4,4 @@ settings.*
 test.*
 default_system.txt
 system.txt
+.flake8

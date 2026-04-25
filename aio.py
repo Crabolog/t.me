@@ -32,7 +32,8 @@ from settings import (
     usernames,
     bmw,
     mamka,
-    mamka_response
+    mamka_response,
+    question_marks
 )
 
 from tool_calls import (
@@ -160,28 +161,28 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
         name = usernames.get(str(user_id), 'невідоме')
 
         messages = [
-                {
-                    "role": "system",
-                    "content": system
-                },
-                *chat_history,
-                {
-                    "role": "user",
-                    "content": "Переслане повідомлення: " + quoted_message,
-                },
-                # {
-                #     "role": "user",
-                #     "content": similar_info,
-                # },
-                {
-                    "role": "user",
-                    "content": "імя співрозмовника: " + name
-                },
-                {
-                    "role": "user",
-                    "content": f"{cleaned_message_text}"
-                }
-            ]
+            {
+                "role": "system",
+                "content": system
+            },
+            *chat_history,
+            {
+                "role": "user",
+                "content": "Переслане повідомлення: " + quoted_message,
+            },
+            # {
+            #     "role": "user",
+            #     "content": similar_info,
+            # },
+            {
+                "role": "user",
+                "content": "імя співрозмовника: " + name
+            },
+            {
+                "role": "user",
+                "content": f"{cleaned_message_text}"
+            }
+        ]
 
         response = client.responses.create(
             input=messages,
@@ -266,6 +267,11 @@ async def random_message(message: Message, bot: Bot):
         logging.info("mamka handler triggered.")
         await message.answer(random.choice(mamka_response))
 
+    # наповнення бази з чату.
+    if len(cleaned_message_text) > 20 and not any(value in cleaned_message_text for value in question_marks):
+        embedding = generate_embedding(cleaned_message_text)
+        await save_embedding(cleaned_message_text, embedding, user_id)
+
     elif 'стас' in cleaned_text or 'лена' in cleaned_text or 'лєна' in cleaned_text:
 
         quoted_message = (
@@ -348,7 +354,6 @@ async def random_message(message: Message, bot: Bot):
                 })
 
             if function_called:
-
                 # func results as user messages
                 for output in tool_outputs:
                     messages.append({
@@ -371,7 +376,7 @@ async def random_message(message: Message, bot: Bot):
                 "role": "assistant",
                 "content": f"{reply}"
             })
-         
+
         except Exception as e:
             logging.error(e)
             await message.answer(f"Ой вей: {e}")
