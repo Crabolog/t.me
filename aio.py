@@ -259,6 +259,11 @@ async def random_message(message: Message, bot: Bot):
         "content": f"{cleaned_message_text}"
     })
 
+    # наповнення бази з чату.
+    if "запам'ятай" in cleaned_text or "запомни" in cleaned_text and len(cleaned_message_text) > 20 and not any(value in cleaned_message_text for value in question_marks):
+        embedding = generate_embedding(cleaned_message_text)
+        await save_embedding(cleaned_message_text, embedding, user_id)
+
     if any(keyword in cleaned_text for keyword in bmw):
         logging.info("bmw handler triggered.")
         await message.answer("Беха топ", reply_markup=None)
@@ -266,11 +271,6 @@ async def random_message(message: Message, bot: Bot):
     elif any(keyword in cleaned_text for keyword in mamka):
         logging.info("mamka handler triggered.")
         await message.answer(random.choice(mamka_response))
-
-    # наповнення бази з чату.
-    if "запам'ятай" in cleaned_text or "запомни" in cleaned_text and len(cleaned_message_text) > 20 and not any(value in cleaned_message_text for value in question_marks):
-        embedding = generate_embedding(cleaned_message_text)
-        await save_embedding(cleaned_message_text, embedding, user_id)
 
     elif 'стас' in cleaned_text or 'лена' in cleaned_text or 'лєна' in cleaned_text:
 
