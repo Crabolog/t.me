@@ -259,20 +259,24 @@ async def random_message(message: Message, bot: Bot):
         "content": f"{cleaned_message_text}"
     })
 
-    # наповнення бази з чату.
-    if "запам'ятай" in cleaned_text or "запомни" in cleaned_text and len(cleaned_message_text) > 20 and not any(value in cleaned_message_text for value in question_marks):
-        embedding = generate_embedding(cleaned_message_text)
-        await save_embedding(cleaned_message_text, embedding, user_id)
-
     if any(keyword in cleaned_text for keyword in bmw):
         logging.info("bmw handler triggered.")
         await message.answer("Беха топ", reply_markup=None)
 
-    if any(keyword in cleaned_text for keyword in mamka):
+    elif any(keyword in cleaned_text for keyword in mamka):
         logging.info("mamka handler triggered.")
         await message.answer(random.choice(mamka_response))
 
-    if 'стас' in cleaned_text or 'лена' in cleaned_text or 'лєна' in cleaned_text:
+    # наповнення бази з чату.
+    # if "запам'ятай" in cleaned_text or "запомни" in cleaned_text and len(cleaned_message_text) > 20 and not any(value in cleaned_message_text for value in question_marks):
+    #     embedding = generate_embedding(cleaned_message_text)
+    #     await save_embedding(cleaned_message_text, embedding, user_id)
+
+    elif 'стас' in cleaned_text or 'лена' in cleaned_text or 'лєна' in cleaned_text:
+
+        if "запам'ятай" in cleaned_text or "запомни" in cleaned_text and len(cleaned_message_text) > 20 and not any(value in cleaned_message_text for value in question_marks):
+            embedding = generate_embedding(cleaned_message_text)
+            await save_embedding(cleaned_message_text, embedding, user_id)
 
         quoted_message = (
             message.reply_to_message.text if message.reply_to_message and message.reply_to_message.text else "повідомлення без тексту"
