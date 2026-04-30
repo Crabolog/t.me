@@ -268,11 +268,11 @@ async def random_message(message: Message, bot: Bot):
         logging.info("bmw handler triggered.")
         await message.answer("Беха топ", reply_markup=None)
 
-    elif any(keyword in cleaned_text for keyword in mamka):
+    if any(keyword in cleaned_text for keyword in mamka):
         logging.info("mamka handler triggered.")
         await message.answer(random.choice(mamka_response))
 
-    elif 'стас' in cleaned_text or 'лена' in cleaned_text or 'лєна' in cleaned_text:
+    if 'стас' in cleaned_text or 'лена' in cleaned_text or 'лєна' in cleaned_text:
 
         quoted_message = (
             message.reply_to_message.text if message.reply_to_message and message.reply_to_message.text else "повідомлення без тексту"
