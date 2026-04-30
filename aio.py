@@ -268,9 +268,10 @@ async def random_message(message: Message, bot: Bot):
         await message.answer(random.choice(mamka_response))
 
     # наповнення бази з чату.
-    if len(cleaned_message_text) > 20 and not any(value in cleaned_message_text for value in question_marks):
-        embedding = generate_embedding(cleaned_message_text)
-        await save_embedding(cleaned_message_text, embedding, user_id)
+    if "запам'ятай" in cleaned_text or "запомни" in cleaned_text and len(cleaned_message_text) > 20 
+        and not any(value in cleaned_message_text for value in question_marks):
+            embedding = generate_embedding(cleaned_message_text)
+            await save_embedding(cleaned_message_text, embedding, user_id)
 
     elif 'стас' in cleaned_text or 'лена' in cleaned_text or 'лєна' in cleaned_text:
 
