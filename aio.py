@@ -5,6 +5,7 @@ import json
 import sys
 import asyncio
 import logging
+import aiohttp
 import numpy as np
 import subprocess
 from datetime import datetime, timezone
@@ -33,7 +34,12 @@ from settings import (
     bmw,
     mamka,
     mamka_response,
-    question_marks
+    question_marks,
+    random_keyword,
+    random_response,
+    bingo_trigger,
+    bingo_list,
+    roll
 )
 
 from tool_calls import (
@@ -130,6 +136,43 @@ async def delete_embedding_handler(message: Message):
             await message.reply(f"Даних для тексту '{embedding_text}' не знайдено в базі.")
     else:
         await message.reply("Будь ласка, вкажіть текст для видалення. Формат: /delete <текст>")
+
+# bingo
+@dp.message(F.text.in_(bingo_trigger))
+async def bingo_command(message: Message):
+    try:
+        text = random.choice(bingo_list)
+    except IndexError:
+        text = 'Спробуй ще разок'
+    await message.answer(text=text,reply_markup=None)
+
+
+# roll
+@dp.message(F.text.in_(roll))
+async def roll_command(message: Message):
+    text = random.randint(0, 100)
+    await message.answer(text=f"{html.bold(message.from_user.full_name)} зролив {text}",reply_markup=None)
+
+# bitcoin
+@dp.message(F.text.in_({'BTC', 'btc', '/btc', '/btc@ZradaLevelsBot', 'btc@ZradaLevelsBot'}))
+async def btc_command(message: Message, bot: Bot):
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT',timeout=15) as resp:
+                data =  await resp.json()
+                symbol = data['symbol']
+                price = float(data['price'])
+                price = "{:.2f}".format(price)
+    except Exception:
+        price = 'Спробуй ще разок'
+    user_id = message.from_user.id
+    bot_user = await bot.get_me()
+    bot_id = bot_user.id
+    response_text = (
+        f"Ціна {symbol}: {price} USDT\n"
+        )
+
+    await message.answer(text=response_text, reply_markup=None)
 
 
 @dp.message(lambda message: message.reply_to_message and message.reply_to_message.from_user.id == 6694398809)
@@ -266,6 +309,10 @@ async def random_message(message: Message, bot: Bot):
     elif any(keyword in cleaned_text for keyword in mamka):
         logging.info("mamka handler triggered.")
         await message.answer(random.choice(mamka_response))
+
+    elif any(keyword in cleaned_text for keyword in random_keyword):
+        logging.info("mamka handler triggered.")
+        await message.answer(random.choice(random_response))
 
     # наповнення бази з чату.
     # if "запам'ятай" in cleaned_text or "запомни" in cleaned_text and len(cleaned_message_text) > 20 and not any(value in cleaned_message_text for value in question_marks):
