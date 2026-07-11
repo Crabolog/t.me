@@ -64,8 +64,8 @@ from dict import *
 from tools import tools
 
 # OpenAI embeddings use cosine similarity; no single official cutoff exists.
-# Keep duplicate detection stricter than retrieval to avoid over-deduplication.
-save_accuracy = 0.82
+# Keep duplicate detection somewhat loose so the bot stores useful memories more often.
+save_accuracy = 0.72
 search_accuracy = 0.38
 max_output_tokens = 1000
 model_name = "gpt-5.4-nano-2026-03-17"

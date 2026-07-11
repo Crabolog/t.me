@@ -13,8 +13,8 @@ from settings import (
 
 logging.basicConfig(level=logging.INFO)
 # OpenAI embeddings use cosine similarity; no single official cutoff exists.
-# Keep duplicate detection stricter than retrieval to avoid over-deduplication.
-save_accuracy = 0.82
+# Keep duplicate detection somewhat loose so the bot stores useful memories more often.
+save_accuracy = 0.72
 search_accuracy = 0.38
 
 
