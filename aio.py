@@ -86,6 +86,27 @@ cursor = None
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 
+def should_save_embedding(text: str) -> bool:
+    if not text:
+        return False
+
+    cleaned = re.sub(r"\s+", " ", text.strip())
+    if len(cleaned) < 20 or len(cleaned) > 800:
+        return False
+
+    lowered = cleaned.lower()
+    if any(marker in lowered for marker in ["http://", "https://", "@", "/start", "/default", "/delete"]):
+        return False
+
+    if any(greeting in lowered for greeting in ["привіт", "привет", "hello", "hi", "дякую", "спасиб", "thanks", "ok", "ок", "добрий день", "добрый день", "пока", "bye"]):
+        return False
+
+    if "?" in cleaned or "!" in cleaned:
+        return False
+
+    return True
+
+
 async def call_function(name, args):
     args = args or {}
     if name == "search_and_extract":
@@ -209,7 +230,7 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
         messages = [
             {
                 "role": "system",
-                "content": get_current_system()
+                "content": get_current_system(model_name)
             },
             *chat_history,
             {
@@ -321,7 +342,7 @@ async def random_message(message: Message, bot: Bot):
 
     elif 'стас' in cleaned_text or 'лена' in cleaned_text or 'лєна' in cleaned_text:
 
-        if len(cleaned_message_text) > 35 and not any(value in cleaned_message_text for value in question_marks):
+        if should_save_embedding(cleaned_message_text):
             embedding = generate_embedding(cleaned_message_text)
             await save_embedding(cleaned_message_text, embedding, user_id)
 
@@ -353,7 +374,7 @@ async def random_message(message: Message, bot: Bot):
             messages = [
                 {
                     "role": "system",
-                    "content": get_current_system()
+                    "content": get_current_system(model_name)
                 },
                 *chat_history,
                 {
