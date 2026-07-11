@@ -5,3 +5,4 @@ test.*
 default_system.txt
 system.txt
 .flake8
+embeddings.sqlite3
