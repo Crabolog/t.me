@@ -12,8 +12,9 @@ from settings import (
 )
 
 logging.basicConfig(level=logging.INFO)
-save_accuracy = 0.65
-search_accuracy = 0.33
+# Higher thresholds reduce false-positive memory matches during similarity search.
+save_accuracy = 0.75
+search_accuracy = 0.5
 
 
 BASE_DIR = Path(__file__).parent

@@ -63,8 +63,9 @@ from dict import *
 
 from tools import tools
 
-save_accuracy = 0.65
-search_accuracy = 0.33
+# Higher thresholds reduce false-positive memory matches during similarity search.
+save_accuracy = 0.75
+search_accuracy = 0.5
 max_output_tokens = 1000
 model_name = "gpt-5.4-nano-2026-03-17"
 chat_history = deque(maxlen=15)
