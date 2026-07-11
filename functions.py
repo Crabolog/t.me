@@ -1,18 +1,13 @@
+import json
+import sqlite3
 import numpy as np
 import logging
 from openai import OpenAI
 from pathlib import Path
-from collections import deque
-from aiogram import Bot, Dispatcher, Router
 from settings import (
     OPENAI_API_KEY,
     conn,
-    tel_token,
     get_connection,
-    usernames,
-    bmw,
-    mamka,
-    mamka_response
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -24,33 +19,44 @@ BASE_DIR = Path(__file__).parent
 SYSTEM_PATH = BASE_DIR / "system.txt"
 DEFAULT_SYSTEM_PATH = BASE_DIR / "default_system.txt"
 
-dp = Dispatcher()
-router = Router()
-dp.include_router(router)
-
-conn.autocommit = True
-cursor = conn.cursor()
+conn.row_factory = sqlite3.Row
+conn.execute("""
+CREATE TABLE IF NOT EXISTS embeddings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    text TEXT NOT NULL,
+    embedding TEXT NOT NULL,
+    user_id TEXT NOT NULL
+)
+""")
+conn.commit()
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 
 async def get_embeddings_from_db():
-    conn = await get_connection()
-    query = "SELECT text, embedding, user_id FROM embeddings"
-    rows = await conn.fetch(query)
-    return [(row['text'], np.array(row['embedding']), row['user_id']) for row in rows]
+    connection = get_connection()
+    try:
+        cursor = connection.execute("SELECT text, embedding, user_id FROM embeddings")
+        rows = cursor.fetchall()
+        return [
+            (row["text"], np.array(json.loads(row["embedding"])), row["user_id"])
+            for row in rows
+        ]
+    finally:
+        connection.close()
 
 
 async def delete_embedding_from_db(embedding_text: str):
-    conn = await get_connection()
-    query = """
-    DELETE FROM embeddings
-    WHERE text ILIKE $1
-    RETURNING *;
-    """
-    result = await conn.fetch(query, f"%{embedding_text}%")
-    await conn.close()
-    return len(result) > 0
+    connection = get_connection()
+    try:
+        cursor = connection.execute(
+            "DELETE FROM embeddings WHERE text LIKE ?",
+            (f"%{embedding_text}%",)
+        )
+        connection.commit()
+        return cursor.rowcount > 0
+    finally:
+        connection.close()
 
 
 def normalize_l2(x):
@@ -76,30 +82,29 @@ def generate_embedding(text: str):
 
 
 async def save_embedding_to_db(text: str, embedding: np.ndarray, user_id: int):
-    conn = await get_connection()
-    existing_embeddings = await get_embeddings_from_db()
-    for existing_text, existing_embedding, existing_user_id in existing_embeddings:
-        similarity = cosine_similarity(embedding, existing_embedding)
-        if similarity >= save_accuracy:
-            print('similar vector found')
-            print('threshold: ' + str(save_accuracy))
-            print('Similarity: ' + str(similarity))
-            print('message text: ' + str(existing_text))
-            return
+    connection = get_connection()
     try:
+        existing_embeddings = await get_embeddings_from_db()
+        for existing_text, existing_embedding, existing_user_id in existing_embeddings:
+            similarity = cosine_similarity(embedding, existing_embedding)
+            if similarity >= save_accuracy:
+                print('similar vector found')
+                print('threshold: ' + str(save_accuracy))
+                print('Similarity: ' + str(similarity))
+                print('message text: ' + str(existing_text))
+                return
         embedding_rounded = np.round(embedding, 8)
         embedding_list = embedding_rounded.tolist()
         user_id = str(user_id)
-        query = """
-        INSERT INTO embeddings (text, embedding, user_id)
-        VALUES ($1, $2::FLOAT8[], $3)
-        """
-        await conn.execute(query, text, embedding_list, user_id)
+        connection.execute(
+            "INSERT INTO embeddings (text, embedding, user_id) VALUES (?, ?, ?)",
+            (text, json.dumps(embedding_list), user_id),
+        )
+        connection.commit()
     except Exception as e:
         logging.error(e)
-
     finally:
-        await conn.close()
+        connection.close()
 
 
 async def save_embedding(text: str, embedding, user_id: int):

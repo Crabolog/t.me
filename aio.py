@@ -8,10 +8,7 @@ import logging
 import aiohttp
 import numpy as np
 import subprocess
-from datetime import datetime, timezone
 import random
-from os import getenv
-from pathlib import Path
 import openai
 from openai import OpenAI
 from collections import deque
@@ -23,7 +20,9 @@ from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from bs4 import BeautifulSoup
-
+from datetime import datetime, timezone
+from os import getenv
+from pathlib import Path
 
 from settings import (
     OPENAI_API_KEY,
@@ -50,7 +49,6 @@ from tool_calls import (
     get_current_system,
     update_system,
     git_pull,
-    system
 )
 
 from functions import (
@@ -65,11 +63,10 @@ from dict import *
 
 from tools import tools
 
-system = system()
 save_accuracy = 0.65
 search_accuracy = 0.33
 max_output_tokens = 1000
-model_name = "gpt-4.1-mini"
+model_name = "gpt-5.4-nano-2026-03-17"
 chat_history = deque(maxlen=15)
 
 logging.basicConfig(level=logging.INFO)
@@ -89,6 +86,7 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 
 
 async def call_function(name, args):
+    args = args or {}
     if name == "search_and_extract":
         return await search_and_extract(**args)
     elif name == "reboot_pi":
@@ -96,7 +94,7 @@ async def call_function(name, args):
     elif name == "git_pull":
         return await git_pull()
     elif name == "update_system":
-        new_prompt = args["new_prompt"]
+        new_prompt = args.get("new_prompt", "")
         return await update_system(new_prompt)
     # elif name == "generate_image":
     #     prompt = args.get("prompt", "")
@@ -120,6 +118,10 @@ async def sys_default(message: Message):
     write_prompt(SYSTEM_PATH, default)
     await message.reply("System оновлено до дефолтного значення")
 
+    # Ensure the next request uses the reset prompt immediately.
+    if hasattr(message, "bot"):
+        await message.bot.send_chat_action(message.chat.id, "typing")
+
 
 @dp.message(Command("delete"))
 async def delete_embedding_handler(message: Message):
@@ -137,7 +139,7 @@ async def delete_embedding_handler(message: Message):
     else:
         await message.reply("Будь ласка, вкажіть текст для видалення. Формат: /delete <текст>")
 
-# bingo
+# -----------------bingo--------------------
 @dp.message(F.text.in_(bingo_trigger))
 async def bingo_command(message: Message):
     try:
@@ -147,13 +149,13 @@ async def bingo_command(message: Message):
     await message.answer(text=text,reply_markup=None)
 
 
-# roll
+# ----------------roll--------------------
 @dp.message(F.text.in_(roll))
 async def roll_command(message: Message):
     text = random.randint(0, 100)
     await message.answer(text=f"{html.bold(message.from_user.full_name)} зролив {text}",reply_markup=None)
 
-# bitcoin
+# ----------------bitcoin------------------
 @dp.message(F.text.in_({'BTC', 'btc', '/btc', '/btc@ZradaLevelsBot', 'btc@ZradaLevelsBot'}))
 async def btc_command(message: Message, bot: Bot):
     try:
@@ -206,7 +208,7 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
         messages = [
             {
                 "role": "system",
-                "content": system
+                "content": get_current_system()
             },
             *chat_history,
             {
@@ -246,6 +248,7 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
 
             tool_outputs.append({
                 "call_id": tool_call.call_id,
+                "name": func_name,
                 "output": str(result)
             })
 
@@ -253,7 +256,7 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
             for output in tool_outputs:
                 messages.append({
                     "role": "user",
-                    "content": f"Результат функції {func_name}: {output['output']}"
+                    "content": f"Результат функції {output['name']}: {output['output']}"
                 })
             response = client.responses.create(
                 input=messages,
@@ -278,6 +281,7 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
     except Exception as e:
         logging.error(e)
         await message.answer(f"Ой вей: {e}")
+
 
 @dp.message(F.text)
 async def random_message(message: Message, bot: Bot):
@@ -314,14 +318,9 @@ async def random_message(message: Message, bot: Bot):
         logging.info("mamka handler triggered.")
         await message.answer(random.choice(random_response))
 
-    # наповнення бази з чату.
-    # if "запам'ятай" in cleaned_text or "запомни" in cleaned_text and len(cleaned_message_text) > 20 and not any(value in cleaned_message_text for value in question_marks):
-    #     embedding = generate_embedding(cleaned_message_text)
-    #     await save_embedding(cleaned_message_text, embedding, user_id)
-
     elif 'стас' in cleaned_text or 'лена' in cleaned_text or 'лєна' in cleaned_text:
 
-        if "запам'ятай" in cleaned_text or "запомни" in cleaned_text and len(cleaned_message_text) > 20 and not any(value in cleaned_message_text for value in question_marks):
+        if len(cleaned_message_text) > 35 and not any(value in cleaned_message_text for value in question_marks):
             embedding = generate_embedding(cleaned_message_text)
             await save_embedding(cleaned_message_text, embedding, user_id)
 
@@ -353,7 +352,7 @@ async def random_message(message: Message, bot: Bot):
             messages = [
                 {
                     "role": "system",
-                    "content": system
+                    "content": get_current_system()
                 },
                 *chat_history,
                 {
@@ -401,6 +400,7 @@ async def random_message(message: Message, bot: Bot):
                 # save for next request
                 tool_outputs.append({
                     "call_id": tool_call.call_id,
+                    "name": func_name,
                     "output": str(result)
                 })
 
@@ -409,7 +409,7 @@ async def random_message(message: Message, bot: Bot):
                 for output in tool_outputs:
                     messages.append({
                         "role": "user",
-                        "content": f"Результат функції {func_name}: {output['output']}"
+                        "content": f"Результат функції {output['name']}: {output['output']}"
                     })
 
                 response = client.responses.create(
