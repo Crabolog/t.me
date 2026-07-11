@@ -90,7 +90,7 @@ def build_memory_hint(similar_messages):
     if not similar_messages:
         return None
 
-    THRESHOLD = 0.42
+    THRESHOLD = 0.50
 
     # логируем все кандидаты как раньше
     for saved_text, similarity, user_id in similar_messages:
@@ -117,7 +117,7 @@ def build_memory_hint(similar_messages):
     for saved_text, similarity, user_id in filtered:
         short_text = re.sub(r"\s+", " ", saved_text or "").strip()
         if len(short_text) > 120:
-            short_text = short_text[:117] + "..."
+            short_text = short_text[:150] + "..."
         author = usernames.get(str(user_id), "невідоме")
         actual_entries.append(
             f"'{short_text}' (схожість {similarity:.2f}, автор {author})"
@@ -127,8 +127,8 @@ def build_memory_hint(similar_messages):
         return None
 
     compact_hint = "; ".join(actual_entries)
-    if len(compact_hint) > 1600:
-        compact_hint = compact_hint[:1600] + "..."
+    if len(compact_hint) > 1000:
+        compact_hint = compact_hint[:1000] + "..."
 
     return (
         "Контекст із пам'яті: "
