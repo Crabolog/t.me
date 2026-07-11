@@ -127,8 +127,8 @@ def build_memory_hint(similar_messages):
         return None
 
     compact_hint = "; ".join(actual_entries)
-    if len(compact_hint) > 320:
-        compact_hint = compact_hint[:317] + "..."
+    if len(compact_hint) > 1600:
+        compact_hint = compact_hint[:1600] + "..."
 
     return (
         "Контекст із пам'яті: "
