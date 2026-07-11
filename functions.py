@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 # OpenAI embeddings use cosine similarity; no single official cutoff exists.
 # Keep duplicate detection somewhat loose so the bot stores useful memories more often.
 save_accuracy = 0.72
-search_accuracy = 0.40
+search_accuracy = 0.42
 
 
 BASE_DIR = Path(__file__).parent
