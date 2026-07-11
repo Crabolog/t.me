@@ -90,18 +90,26 @@ def build_memory_hint(similar_messages):
     if not similar_messages:
         return None
 
-    compact_entries = []
-    for saved_text, similarity, user_id in similar_messages[:2]:
+    summaries = []
+    for saved_text, similarity, user_id in similar_messages[:4]:
         short_text = re.sub(r"\s+", " ", saved_text or "").strip()
-        if len(short_text) > 120:
-            short_text = short_text[:117] + "..."
+        if len(short_text) > 140:
+            short_text = short_text[:137] + "..."
         author = usernames.get(str(user_id), "невідоме")
-        compact_entries.append(f"{short_text} (схожість {similarity:.2f}, автор {author})")
+        summaries.append(f"{short_text} (схожість {similarity:.2f}, автор {author})")
 
-    if not compact_entries:
+    if not summaries:
         return None
 
-    return "Контекст із пам'яті (не основа для відповіді): " + "; ".join(compact_entries)
+    compact_summary = "; ".join(summaries)
+    if len(compact_summary) > 320:
+        compact_summary = compact_summary[:317] + "..."
+
+    return (
+        "Контекст із пам'яті (не основа для відповіді): "
+        "є кілька схожих спогадів про попередні теми, збережених у базі; "
+        f"підсумок: {compact_summary}"
+    )
 
 
 def should_save_embedding(text: str) -> bool:
