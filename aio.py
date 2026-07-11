@@ -100,25 +100,24 @@ def build_memory_hint(similar_messages):
             author,
         )
 
-    summaries = []
-    for saved_text, similarity, user_id in similar_messages[:4]:
+    actual_entries = []
+    for saved_text, similarity, user_id in similar_messages[:3]:
         short_text = re.sub(r"\s+", " ", saved_text or "").strip()
-        if len(short_text) > 140:
-            short_text = short_text[:137] + "..."
+        if len(short_text) > 120:
+            short_text = short_text[:117] + "..."
         author = usernames.get(str(user_id), "невідоме")
-        summaries.append(f"{short_text} (схожість {similarity:.2f}, автор {author})")
+        actual_entries.append(f"'{short_text}' (схожість {similarity:.2f}, автор {author})")
 
-    if not summaries:
+    if not actual_entries:
         return None
 
-    compact_summary = "; ".join(summaries)
-    if len(compact_summary) > 320:
-        compact_summary = compact_summary[:317] + "..."
+    compact_hint = "; ".join(actual_entries)
+    if len(compact_hint) > 320:
+        compact_hint = compact_hint[:317] + "..."
 
     return (
         "Контекст із пам'яті (не основа для відповіді): "
-        "є кілька схожих спогадів про попередні теми, збережених у базі; "
-        f"підсумок: {compact_summary}"
+        f"схожі попередні повідомлення: {compact_hint}"
     )
 
 
@@ -293,7 +292,11 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
         if memory_hint:
             messages.append({
                 "role": "user",
-                "content": memory_hint
+                "content": (
+                    "Необов'язковий контекст із пам'яті "
+                    "(використовуй лише якщо він допомагає, але не замінюй поточний запит): "
+                    f"{memory_hint}"
+                )
             })
 
         response = client.responses.create(
@@ -431,17 +434,22 @@ async def random_message(message: Message, bot: Bot):
                     "role": "user",
                     "content": "імя співрозмовника: " + name
                 },
-                {
-                    "role": "user",
-                    "content": f"{cleaned_message_text}"
-                },
             ]
 
             if memory_hint:
                 messages.append({
                     "role": "user",
-                    "content": memory_hint
+                    "content": (
+                        "Необов'язковий контекст із пам'яті "
+                        "(використовуй лише якщо він допомагає, але не замінюй поточний запит): "
+                        f"{memory_hint}"
+                    )
                 })
+
+            messages.append({
+                "role": "user",
+                "content": f"{cleaned_message_text}"
+            })
 
             response = client.responses.create(
                 input=messages,
