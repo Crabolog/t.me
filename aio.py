@@ -68,7 +68,7 @@ from tools import tools
 save_accuracy = 0.72
 search_accuracy = 0.38
 max_output_tokens = 1000
-model_name = "gpt-5.4-nano-2026-03-17"
+model_name = "gpt-4.1-mini-2025-04-14"
 chat_history = deque(maxlen=15)
 
 logging.basicConfig(level=logging.INFO)
