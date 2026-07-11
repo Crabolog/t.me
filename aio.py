@@ -90,6 +90,9 @@ def build_memory_hint(similar_messages):
     if not similar_messages:
         return None
 
+    THRESHOLD = 0.42
+
+    # логируем все кандидаты как раньше
     for saved_text, similarity, user_id in similar_messages:
         short_text = re.sub(r"\s+", " ", saved_text or "").strip()
         author = usernames.get(str(user_id), "невідоме")
@@ -100,13 +103,25 @@ def build_memory_hint(similar_messages):
             author,
         )
 
+    # фильтр по similarity
+    filtered = [
+        (saved_text, similarity, user_id)
+        for saved_text, similarity, user_id in similar_messages
+        if similarity >= THRESHOLD
+    ]
+
+    if not filtered:
+        return None
+
     actual_entries = []
-    for saved_text, similarity, user_id in similar_messages[:3]:
+    for saved_text, similarity, user_id in filtered:
         short_text = re.sub(r"\s+", " ", saved_text or "").strip()
         if len(short_text) > 120:
             short_text = short_text[:117] + "..."
         author = usernames.get(str(user_id), "невідоме")
-        actual_entries.append(f"'{short_text}' (схожість {similarity:.2f}, автор {author})")
+        actual_entries.append(
+            f"'{short_text}' (схожість {similarity:.2f}, автор {author})"
+        )
 
     if not actual_entries:
         return None
