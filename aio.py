@@ -79,8 +79,7 @@ dp = Dispatcher()
 router = Router()
 dp.include_router(router)
 
-conn.autocommit = True
-cursor = conn.cursor()
+cursor = None
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
