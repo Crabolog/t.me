@@ -145,4 +145,4 @@ async def find_similar_messages(new_text):
 
     similar_messages.sort(key=lambda item: item[1], reverse=True)
     logging.info("Found %s similar messages", len(similar_messages))
-    return similar_messages[:2]
+    return similar_messages
