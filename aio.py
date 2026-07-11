@@ -131,7 +131,7 @@ def build_memory_hint(similar_messages):
         compact_hint = compact_hint[:317] + "..."
 
     return (
-        "Контекст із пам'яті (не основа для відповіді): "
+        "Контекст із пам'яті: "
         f"схожі попередні повідомлення: {compact_hint}"
     )
 
@@ -308,8 +308,8 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
             messages.append({
                 "role": "user",
                 "content": (
-                    "Необов'язковий контекст із пам'яті "
-                    "(використовуй лише якщо він допомагає, але не замінюй поточний запит): "
+                    "контекст із пам'яті "
+                    "(використовуй лише якщо він допомагає): "
                     f"{memory_hint}"
                 )
             })
@@ -455,8 +455,8 @@ async def random_message(message: Message, bot: Bot):
                 messages.append({
                     "role": "user",
                     "content": (
-                        "Необов'язковий контекст із пам'яті "
-                        "(використовуй лише якщо він допомагає, але не замінюй поточний запит): "
+                        "контекст із пам'яті "
+                        "(використовуй лише якщо він допомагає): "
                         f"{memory_hint}"
                     )
                 })
@@ -465,7 +465,7 @@ async def random_message(message: Message, bot: Bot):
                 "role": "user",
                 "content": f"{cleaned_message_text}"
             })
-
+            print(messages)
             response = client.responses.create(
                 input=messages,
                 model=model_name,
