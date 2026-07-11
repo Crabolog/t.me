@@ -12,9 +12,10 @@ from settings import (
 )
 
 logging.basicConfig(level=logging.INFO)
-# Higher thresholds reduce false-positive memory matches during similarity search.
-save_accuracy = 0.75
-search_accuracy = 0.5
+# OpenAI embeddings use cosine similarity; no single official cutoff exists.
+# Keep duplicate detection stricter than retrieval to avoid over-deduplication.
+save_accuracy = 0.82
+search_accuracy = 0.38
 
 
 BASE_DIR = Path(__file__).parent

@@ -63,9 +63,10 @@ from dict import *
 
 from tools import tools
 
-# Higher thresholds reduce false-positive memory matches during similarity search.
-save_accuracy = 0.75
-search_accuracy = 0.5
+# OpenAI embeddings use cosine similarity; no single official cutoff exists.
+# Keep duplicate detection stricter than retrieval to avoid over-deduplication.
+save_accuracy = 0.82
+search_accuracy = 0.38
 max_output_tokens = 1000
 model_name = "gpt-5.4-nano-2026-03-17"
 chat_history = deque(maxlen=15)
