@@ -86,6 +86,24 @@ cursor = None
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 
+def build_memory_hint(similar_messages):
+    if not similar_messages:
+        return None
+
+    compact_entries = []
+    for saved_text, similarity, user_id in similar_messages[:2]:
+        short_text = re.sub(r"\s+", " ", saved_text or "").strip()
+        if len(short_text) > 120:
+            short_text = short_text[:117] + "..."
+        author = usernames.get(str(user_id), "невідоме")
+        compact_entries.append(f"{short_text} (схожість {similarity:.2f}, автор {author})")
+
+    if not compact_entries:
+        return None
+
+    return "Контекст із пам'яті (не основа для відповіді): " + "; ".join(compact_entries)
+
+
 def should_save_embedding(text: str) -> bool:
     if not text:
         return False
@@ -225,6 +243,13 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
             quoted_message = "повідомлення без тексту"
 
     try:
+        embedding = generate_embedding(cleaned_message_text)
+        similar_messages = await find_similar_messages(embedding)
+        memory_hint = build_memory_hint(similar_messages)
+
+        if memory_hint:
+            logging.info("Prepared memory hint for reply handler: %s", memory_hint)
+
         name = usernames.get(str(user_id), 'невідоме')
 
         messages = [
@@ -237,10 +262,6 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
                 "role": "user",
                 "content": "Переслане повідомлення: " + quoted_message,
             },
-            # {
-            #     "role": "user",
-            #     "content": similar_info,
-            # },
             {
                 "role": "user",
                 "content": "імя співрозмовника: " + name
@@ -250,6 +271,12 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
                 "content": f"{cleaned_message_text}"
             }
         ]
+
+        if memory_hint:
+            messages.append({
+                "role": "user",
+                "content": memory_hint
+            })
 
         response = client.responses.create(
             input=messages,
@@ -360,13 +387,10 @@ async def random_message(message: Message, bot: Bot):
 
             embedding = generate_embedding(cleaned_message_text)
             similar_messages = await find_similar_messages(embedding)
+            memory_hint = build_memory_hint(similar_messages)
 
-            if similar_messages:
-                similar_info = "\n".join([f"схожа інформація є у базі: {msg[0]} автор:{usernames.get(str(msg[2]), 'невідоме')} (схожість: {msg[1]:.2f})" for msg in similar_messages])
-                logging.info(f"схожа інформація є у базі: {msg[0]} (схожість: {msg[1]:.2f})" for msg in similar_messages)
-
-            else:
-                similar_info = "Схожих повідомленнь немає"
+            if memory_hint:
+                logging.info("Prepared memory hint: %s", memory_hint)
 
             name = usernames.get(str(user_id), 'невідоме')
             original_name = usernames.get(str(quoted_user_id), 'невідоме')
@@ -393,11 +417,13 @@ async def random_message(message: Message, bot: Bot):
                     "role": "user",
                     "content": f"{cleaned_message_text}"
                 },
-                {
-                    "role": "user",
-                    "content": similar_info
-                },
             ]
+
+            if memory_hint:
+                messages.append({
+                    "role": "user",
+                    "content": memory_hint
+                })
 
             response = client.responses.create(
                 input=messages,

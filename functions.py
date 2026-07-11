@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 # OpenAI embeddings use cosine similarity; no single official cutoff exists.
 # Keep duplicate detection somewhat loose so the bot stores useful memories more often.
 save_accuracy = 0.72
-search_accuracy = 0.38
+search_accuracy = 0.40
 
 
 BASE_DIR = Path(__file__).parent
@@ -142,5 +142,7 @@ async def find_similar_messages(new_text):
         similarity = cosine_similarity(new_embedding, saved_embedding)
         if similarity >= search_accuracy:
             similar_messages.append((saved_text, similarity, saved_user_id))
+
+    similar_messages.sort(key=lambda item: item[1], reverse=True)
     logging.info("Found %s similar messages", len(similar_messages))
-    return similar_messages
+    return similar_messages[:2]
