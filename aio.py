@@ -90,6 +90,16 @@ def build_memory_hint(similar_messages):
     if not similar_messages:
         return None
 
+    for saved_text, similarity, user_id in similar_messages:
+        short_text = re.sub(r"\s+", " ", saved_text or "").strip()
+        author = usernames.get(str(user_id), "невідоме")
+        logging.info(
+            "Similar memory candidate: %s | similarity=%.2f | author=%s",
+            short_text,
+            similarity,
+            author,
+        )
+
     summaries = []
     for saved_text, similarity, user_id in similar_messages[:4]:
         short_text = re.sub(r"\s+", " ", saved_text or "").strip()
