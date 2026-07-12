@@ -40,6 +40,23 @@ tools = [
     },
     {
         "type": "function",
+        "name": "update_model_name",
+        "description": "Оновлює назву активної моделі для подальших запитів.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "model_name": {
+                    "type": "string",
+                    "description": "Нова назва моделі, наприклад gpt-4.1-mini-2025-04-14"
+                }
+            },
+            "required": ["model_name"],
+            "additionalProperties": False
+        },
+        "strict": True
+    },
+    {
+        "type": "function",
         "name": "update_system",
         "description": "Оновлює системний промпт, який задає поведінку бота.",
         "parameters": {

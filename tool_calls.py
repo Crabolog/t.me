@@ -14,6 +14,8 @@ dp = Dispatcher()
 BASE_DIR = Path(__file__).parent
 SYSTEM_PATH = BASE_DIR / "system.txt"
 DEFAULT_SYSTEM_PATH = BASE_DIR / "default_system.txt"
+MODEL_NAME_PATH = BASE_DIR / "model_name.txt"
+DEFAULT_MODEL_NAME = "gpt-4.1-mini-2025-04-14"
 
 
 if not DEFAULT_SYSTEM_PATH.exists():
@@ -63,6 +65,30 @@ def get_current_system(model_name: str | None = None) -> str:
         active_model = model_name or "unknown"
         return prompt.replace("{model_name}", active_model)
     return prompt
+
+
+def get_model_name() -> str:
+    if MODEL_NAME_PATH.exists():
+        value = MODEL_NAME_PATH.read_text(encoding="utf-8").strip()
+        if value:
+            return value
+
+    MODEL_NAME_PATH.write_text(DEFAULT_MODEL_NAME, encoding="utf-8")
+    return DEFAULT_MODEL_NAME
+
+
+def set_model_name(model_name: str) -> str:
+    cleaned = (model_name or "").strip()
+    if not cleaned:
+        raise ValueError("model_name cannot be empty")
+
+    MODEL_NAME_PATH.write_text(cleaned, encoding="utf-8")
+    return cleaned
+
+
+async def update_model_name(model_name: str) -> str:
+    cleaned = set_model_name(model_name)
+    return f"Model updated to: {cleaned}"
 
 
 def system():

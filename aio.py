@@ -49,6 +49,8 @@ from tool_calls import (
     get_current_system,
     update_system,
     git_pull,
+    get_model_name,
+    update_model_name,
 )
 
 from functions import (
@@ -68,7 +70,7 @@ from tools import tools
 save_accuracy = 0.72
 search_accuracy = 0.38
 max_output_tokens = 1000
-model_name = "gpt-4.1-mini-2025-04-14"
+model_name = get_model_name()
 chat_history = deque(maxlen=15)
 
 logging.basicConfig(level=logging.INFO)
@@ -90,7 +92,7 @@ def build_memory_hint(similar_messages):
     if not similar_messages:
         return None
 
-    THRESHOLD = 0.50
+    THRESHOLD = 0.42
 
     # логируем все кандидаты как раньше
     for saved_text, similarity, user_id in similar_messages:
@@ -120,7 +122,7 @@ def build_memory_hint(similar_messages):
             short_text = short_text[:150] + "..."
         author = usernames.get(str(user_id), "невідоме")
         actual_entries.append(
-            f"'{short_text}' (схожість {similarity:.2f}, автор {author})"
+            f"'{short_text}', автор {author})"
         )
 
     if not actual_entries:
@@ -168,6 +170,16 @@ async def call_function(name, args):
     elif name == "update_system":
         new_prompt = args.get("new_prompt", "")
         return await update_system(new_prompt)
+    elif name == "update_model_name":
+        new_model = args.get("model_name", "")
+        try:
+            await update_model_name(new_model)
+        except ValueError as exc:
+            return f"Помилка: {exc}"
+
+        global model_name
+        model_name = get_model_name()
+        return f"Модель оновлена: {model_name}"
     # elif name == "generate_image":
     #     prompt = args.get("prompt", "")
     #     try:
@@ -465,7 +477,6 @@ async def random_message(message: Message, bot: Bot):
                 "role": "user",
                 "content": f"{cleaned_message_text}"
             })
-            print(messages)
             response = client.responses.create(
                 input=messages,
                 model=model_name,
