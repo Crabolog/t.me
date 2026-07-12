@@ -15,7 +15,9 @@ BASE_DIR = Path(__file__).parent
 SYSTEM_PATH = BASE_DIR / "system.txt"
 DEFAULT_SYSTEM_PATH = BASE_DIR / "default_system.txt"
 MODEL_NAME_PATH = BASE_DIR / "model_name.txt"
+ACCURACY_PATH = BASE_DIR / "accuracy.txt"
 DEFAULT_MODEL_NAME = "gpt-4.1-mini-2025-04-14"
+DEFAULT_ACCURACY = 0.42
 
 
 if not DEFAULT_SYSTEM_PATH.exists():
@@ -89,6 +91,41 @@ def set_model_name(model_name: str) -> str:
 async def update_model_name(model_name: str) -> str:
     cleaned = set_model_name(model_name)
     return f"Model updated to: {cleaned}"
+
+def get_accuracy() -> float:
+    if ACCURACY_PATH.exists():
+        raw = ACCURACY_PATH.read_text(encoding="utf-8").strip()
+        if raw:
+            try:
+                return float(raw)
+            except ValueError:
+                pass  
+
+    # fallback
+    ACCURACY_PATH.write_text(str(DEFAULT_ACCURACY), encoding="utf-8")
+    return DEFAULT_ACCURACY
+
+
+def set_accuracy(accuracy: float) -> float:
+    if accuracy is None:
+        raise ValueError("accuracy cannot be None")
+
+    try:
+        value = float(accuracy)
+    except (TypeError, ValueError):
+        raise ValueError("accuracy must be a number")
+
+    # опционально: защита от бреда
+    if not (0 <= value <= 1):
+        raise ValueError("accuracy must be between 0 and 1")
+
+    ACCURACY_PATH.write_text(str(value), encoding="utf-8")
+    return value
+
+
+async def update_accuracy(accuracy: float) -> str:
+    value = set_accuracy(accuracy)
+    return f"accuracy updated to: {value}"
 
 
 def system():

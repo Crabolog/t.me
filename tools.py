@@ -57,6 +57,23 @@ tools = [
     },
     {
         "type": "function",
+        "name": "update_accuracy",
+        "description": "Оновлює точність пошуку схожих повідомленнь у базі",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "accuracy": {
+                    "type": "number",
+                    "description": "Нове значення точності, наприклад 0.42"
+                }
+            },
+            "required": ["accuracy"],
+            "additionalProperties": False
+        },
+        "strict": True
+    },
+    {
+        "type": "function",
         "name": "update_system",
         "description": "Оновлює системний промпт, який задає поведінку бота.",
         "parameters": {

@@ -51,6 +51,8 @@ from tool_calls import (
     git_pull,
     get_model_name,
     update_model_name,
+    get_accuracy,
+    update_accuracy
 )
 
 from functions import (
@@ -71,6 +73,7 @@ save_accuracy = 0.72
 search_accuracy = 0.38
 max_output_tokens = 1000
 model_name = get_model_name()
+accuracy = get_accuracy()
 chat_history = deque(maxlen=15)
 
 logging.basicConfig(level=logging.INFO)
@@ -92,8 +95,8 @@ def build_memory_hint(similar_messages):
     if not similar_messages:
         return None
 
-    THRESHOLD = 0.42
-
+    THRESHOLD = accuracy  # Use the accuracy value from settings
+    THRESHOLD = float(THRESHOLD)
     # логируем все кандидаты как раньше
     for saved_text, similarity, user_id in similar_messages:
         short_text = re.sub(r"\s+", " ", saved_text or "").strip()
@@ -180,6 +183,16 @@ async def call_function(name, args):
         global model_name
         model_name = get_model_name()
         return f"Модель оновлена: {model_name}"
+    elif name == "update_accuracy":
+        new_accuracy = args.get("accuracy", "")
+        try:
+            await update_accuracy(new_accuracy)
+        except ValueError as exc:
+            return f"Помилка: {exc}"
+
+        global accuracy
+        accuracy = get_accuracy()
+        return f"Точність оновлена: {accuracy}"
     # elif name == "generate_image":
     #     prompt = args.get("prompt", "")
     #     try:
@@ -377,7 +390,7 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
 
     except Exception as e:
         logging.error(e)
-        await message.answer(f"Ой вей: {e}")
+        await message.answer(f"Ой вей: {e}",parse_mode=None)
 
 
 @dp.message(F.text)
@@ -530,7 +543,7 @@ async def random_message(message: Message, bot: Bot):
 
         except Exception as e:
             logging.error(e)
-            await message.answer(f"Ой вей: {e}")
+            await message.answer(f"Ой вей: {e}",parse_mode=None)
 
 
 async def main() -> None:
