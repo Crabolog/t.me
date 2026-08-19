@@ -274,123 +274,123 @@ async def btc_command(message: Message, bot: Bot):
     await message.answer(text=response_text, reply_markup=None)
 
 
-# @dp.message(lambda message: message.reply_to_message and message.reply_to_message.from_user.id == 6694398809)
-# async def handle_bot_reply(message: types.Message, bot: Bot):
+@dp.message(lambda message: message.reply_to_message and message.reply_to_message.from_user.id == 6694398809)
+async def handle_bot_reply(message: types.Message, bot: Bot):
 
-#     user_id = message.from_user.id if message.from_user.id else 0
-#     bot_user = await bot.get_me()
-#     bot_id = bot_user.id
-#     bot_name = usernames.get(str(bot_id), 'невідоме')
-#     time = datetime.now(timezone.utc).isoformat(sep=" ", timespec="seconds")
+    user_id = message.from_user.id if message.from_user.id else 0
+    bot_user = await bot.get_me()
+    bot_id = bot_user.id
+    bot_name = usernames.get(str(bot_id), 'невідоме')
+    time = datetime.now(timezone.utc).isoformat(sep=" ", timespec="seconds")
 
-#     cleaned_text = re.sub(
-#         r"[-()\"#/@;:<>{}`+=~|.!,]", "", message.text.lower()
-#     )
+    cleaned_text = re.sub(
+        r"[-()\"#/@;:<>{}`+=~|.!,]", "", message.text.lower()
+    )
 
-#     cleaned_message_text = re.sub(
-#         r'^\s*стас[,\s]+', '', message.text, flags=re.IGNORECASE
-#     ).strip()
+    cleaned_message_text = re.sub(
+        r'^\s*стас[,\s]+', '', message.text, flags=re.IGNORECASE
+    ).strip()
 
-#     quoted_message = message.reply_to_message.text if message.reply_to_message else message.text
+    quoted_message = message.reply_to_message.text if message.reply_to_message else message.text
 
-#     if not quoted_message and message.reply_to_message:
-#         if message.reply_to_message.caption:
-#             quoted_message = message.reply_to_message.caption
-#         else:
-#             quoted_message = "повідомлення без тексту"
+    if not quoted_message and message.reply_to_message:
+        if message.reply_to_message.caption:
+            quoted_message = message.reply_to_message.caption
+        else:
+            quoted_message = "повідомлення без тексту"
 
-#     try:
-#         embedding = generate_embedding(cleaned_message_text)
-#         similar_messages = await find_similar_messages(embedding)
-#         memory_hint = build_memory_hint(similar_messages)
+    try:
+        embedding = generate_embedding(cleaned_message_text)
+        similar_messages = await find_similar_messages(embedding)
+        memory_hint = build_memory_hint(similar_messages)
 
-#         if memory_hint:
-#             logging.info("Prepared memory hint for reply handler: %s", memory_hint)
+        if memory_hint:
+            logging.info("Prepared memory hint for reply handler: %s", memory_hint)
 
-#         name = usernames.get(str(user_id), 'невідоме')
+        name = usernames.get(str(user_id), 'невідоме')
 
-#         messages = [
-#             {
-#                 "role": "system",
-#                 "content": get_current_system(model_name)
-#             },
-#             *chat_history,
-#             {
-#                 "role": "user",
-#                 "content": "Переслане повідомлення: " + quoted_message,
-#             },
-#             {
-#                 "role": "user",
-#                 "content": "імя співрозмовника: " + name
-#             },
-#             {
-#                 "role": "user",
-#                 "content": f"{cleaned_message_text}"
-#             }
-#         ]
+        messages = [
+            {
+                "role": "system",
+                "content": get_current_system(model_name)
+            },
+            *chat_history,
+            {
+                "role": "user",
+                "content": "Переслане повідомлення: " + quoted_message,
+            },
+            {
+                "role": "user",
+                "content": "імя співрозмовника: " + name
+            },
+            {
+                "role": "user",
+                "content": f"{cleaned_message_text}"
+            }
+        ]
 
-#         if memory_hint:
-#             messages.append({
-#                 "role": "user",
-#                 "content": (
-#                     "контекст із пам'яті "
-#                     "(використовуй лише якщо він допомагає): "
-#                     f"{memory_hint}"
-#                 )
-#             })
+        if memory_hint:
+            messages.append({
+                "role": "user",
+                "content": (
+                    "контекст із пам'яті "
+                    "(використовуй лише якщо він допомагає): "
+                    f"{memory_hint}"
+                )
+            })
 
-#         response = client.responses.create(
-#             input=messages,
-#             model=model_name,
-#             tools=tools,
-#             # max_output_tokens=max_output_tokens
-#         )
-#         function_called = False
-#         tool_outputs = []
-#         for tool_call in response.output:
-#             if tool_call.type != "function_call":
-#                 continue
+        response = client.responses.create(
+            input=messages,
+            model=model_name,
+            tools=tools,
+            # max_output_tokens=max_output_tokens
+        )
+        function_called = False
+        tool_outputs = []
+        for tool_call in response.output:
+            if tool_call.type != "function_call":
+                continue
 
-#             function_called = True
-#             func_name = tool_call.name
-#             args = json.loads(tool_call.arguments)
-#             result = await call_function(func_name, args)
+            function_called = True
+            func_name = tool_call.name
+            args = json.loads(tool_call.arguments)
+            result = await call_function(func_name, args)
 
-#             tool_outputs.append({
-#                 "call_id": tool_call.call_id,
-#                 "name": func_name,
-#                 "output": str(result)
-#             })
+            tool_outputs.append({
+                "call_id": tool_call.call_id,
+                "name": func_name,
+                "output": str(result)
+            })
 
-#         if function_called:
-#             for output in tool_outputs:
-#                 messages.append({
-#                     "role": "user",
-#                     "content": f"Результат функції {output['name']}: {output['output']}"
-#                 })
-#             response = client.responses.create(
-#                 input=messages,
-#                 model=model_name,
-#                 tools=tools
-#                 # max_output_tokens=max_output_tokens
-#             )
+        if function_called:
+            for output in tool_outputs:
+                messages.append({
+                    "role": "user",
+                    "content": f"Результат функції {output['name']}: {output['output']}"
+                })
+            response = client.responses.create(
+                input=messages,
+                model=model_name,
+                tools=tools
+                # max_output_tokens=max_output_tokens
+            )
 
-#         reply = response.output_text
-#         await message.answer(reply, reply_markup=None, parse_mode=None)
+        reply = response.output_text
+        await message.answer(reply, reply_markup=None, parse_mode=None)
 
-#         chat_history.append({
-#             "role": "user",
-#             "content": f"{cleaned_message_text}"
-#         })
+        chat_history.append({
+            "role": "user",
+            "content": f"{cleaned_message_text}"
+        })
 
-#         chat_history.append({
-#             "role": "assistant",
-#             "content": f"{reply}"
-#         })
+        chat_history.append({
+            "role": "assistant",
+            "content": f"{reply}"
+        })
 
-#     except Exception as e:
-#         logging.error(e)
-#         await message.answer(f"Ой вей: {e}",parse_mode=None)
+    except Exception as e:
+        logging.error(e)
+        await message.answer(f"Ой вей: {e}",parse_mode=None)
 
 
 @dp.message(F.text)
@@ -428,122 +428,122 @@ async def random_message(message: Message, bot: Bot):
         logging.info("mamka handler triggered.")
         await message.answer(random.choice(random_response))
 
-    # elif 'стас' in cleaned_text or 'лена' in cleaned_text or 'лєна' in cleaned_text:
+    elif 'стас' in cleaned_text or 'лена' in cleaned_text or 'лєна' in cleaned_text:
 
-    #     if should_save_embedding(cleaned_message_text):
-    #         embedding = generate_embedding(cleaned_message_text)
-    #         await save_embedding(cleaned_message_text, embedding, user_id)
+        if should_save_embedding(cleaned_message_text):
+            embedding = generate_embedding(cleaned_message_text)
+            await save_embedding(cleaned_message_text, embedding, user_id)
 
-    #     quoted_message = (
-    #         message.reply_to_message.text if message.reply_to_message and message.reply_to_message.text else "повідомлення без тексту"
-    #     )
+        quoted_message = (
+            message.reply_to_message.text if message.reply_to_message and message.reply_to_message.text else "повідомлення без тексту"
+        )
 
-    #     quoted_userid = (
-    #         message.reply_to_message.from_user.id if message.reply_to_message and message.reply_to_message.from_user else 0
-    #     )
+        quoted_userid = (
+            message.reply_to_message.from_user.id if message.reply_to_message and message.reply_to_message.from_user else 0
+        )
 
-    #     quoted_user_id = quoted_userid if quoted_userid else 0
+        quoted_user_id = quoted_userid if quoted_userid else 0
 
-    #     try:
+        try:
 
-    #         embedding = generate_embedding(cleaned_message_text)
-    #         similar_messages = await find_similar_messages(embedding)
-    #         memory_hint = build_memory_hint(similar_messages)
+            embedding = generate_embedding(cleaned_message_text)
+            similar_messages = await find_similar_messages(embedding)
+            memory_hint = build_memory_hint(similar_messages)
 
-    #         if memory_hint:
-    #             logging.info("Prepared memory hint: %s", memory_hint)
+            if memory_hint:
+                logging.info("Prepared memory hint: %s", memory_hint)
 
-    #         name = usernames.get(str(user_id), 'невідоме')
-    #         original_name = usernames.get(str(quoted_user_id), 'невідоме')
+            name = usernames.get(str(user_id), 'невідоме')
+            original_name = usernames.get(str(quoted_user_id), 'невідоме')
 
-    #         messages = [
-    #             {
-    #                 "role": "system",
-    #                 "content": get_current_system(model_name)
-    #             },
-    #             *chat_history,
-    #             {
-    #                 "role": "user",
-    #                 "content": "Переслане повідомлення: " + quoted_message,
-    #             },
-    #             {
-    #                 "role": "user",
-    #                 "content": "Автор пересланого повідомлення: " + original_name,
-    #             },
-    #             {
-    #                 "role": "user",
-    #                 "content": "імя співрозмовника: " + name
-    #             },
-    #         ]
+            messages = [
+                {
+                    "role": "system",
+                    "content": get_current_system(model_name)
+                },
+                *chat_history,
+                {
+                    "role": "user",
+                    "content": "Переслане повідомлення: " + quoted_message,
+                },
+                {
+                    "role": "user",
+                    "content": "Автор пересланого повідомлення: " + original_name,
+                },
+                {
+                    "role": "user",
+                    "content": "імя співрозмовника: " + name
+                },
+            ]
 
-    #         if memory_hint:
-    #             messages.append({
-    #                 "role": "user",
-    #                 "content": (
-    #                     "контекст із пам'яті "
-    #                     "(використовуй лише якщо він допомагає): "
-    #                     f"{memory_hint}"
-    #                 )
-    #             })
+            if memory_hint:
+                messages.append({
+                    "role": "user",
+                    "content": (
+                        "контекст із пам'яті "
+                        "(використовуй лише якщо він допомагає): "
+                        f"{memory_hint}"
+                    )
+                })
 
-    #         messages.append({
-    #             "role": "user",
-    #             "content": f"{cleaned_message_text}"
-    #         })
-    #         response = client.responses.create(
-    #             input=messages,
-    #             model=model_name,
-    #             tools=tools,
-    #             # max_output_tokens=max_output_tokens
-    #         )
+            messages.append({
+                "role": "user",
+                "content": f"{cleaned_message_text}"
+            })
+            response = client.responses.create(
+                input=messages,
+                model=model_name,
+                tools=tools,
+                # max_output_tokens=max_output_tokens
+            )
 
-    #         function_called = False
-    #         tool_outputs = []
+            function_called = False
+            tool_outputs = []
 
-    #         for tool_call in response.output:
-    #             if tool_call.type != "function_call":
-    #                 continue
+            for tool_call in response.output:
+                if tool_call.type != "function_call":
+                    continue
 
-    #             function_called = True
-    #             func_name = tool_call.name
-    #             args = json.loads(tool_call.arguments)
+                function_called = True
+                func_name = tool_call.name
+                args = json.loads(tool_call.arguments)
 
-    #             result = await call_function(func_name, args)
+                result = await call_function(func_name, args)
 
-    #             # save for next request
-    #             tool_outputs.append({
-    #                 "call_id": tool_call.call_id,
-    #                 "name": func_name,
-    #                 "output": str(result)
-    #             })
+                # save for next request
+                tool_outputs.append({
+                    "call_id": tool_call.call_id,
+                    "name": func_name,
+                    "output": str(result)
+                })
 
-    #         if function_called:
-    #             # func results as user messages
-    #             for output in tool_outputs:
-    #                 messages.append({
-    #                     "role": "user",
-    #                     "content": f"Результат функції {output['name']}: {output['output']}"
-    #                 })
+            if function_called:
+                # func results as user messages
+                for output in tool_outputs:
+                    messages.append({
+                        "role": "user",
+                        "content": f"Результат функції {output['name']}: {output['output']}"
+                    })
 
-    #             response = client.responses.create(
-    #                 input=messages,
-    #                 model=model_name,
-    #                 tools=tools
-    #                 # max_output_tokens=max_output_tokens
-    #             )
+                response = client.responses.create(
+                    input=messages,
+                    model=model_name,
+                    tools=tools
+                    # max_output_tokens=max_output_tokens
+                )
 
-    #         reply = response.output_text
+            reply = response.output_text
 
-    #         await message.answer(reply, reply_markup=None, parse_mode=None)
+            await message.answer(reply, reply_markup=None, parse_mode=None)
 
-    #         chat_history.append({
-    #             "role": "assistant",
-    #             "content": f"{reply}"
-    #         })
+            chat_history.append({
+                "role": "assistant",
+                "content": f"{reply}"
+            })
 
-    #     except Exception as e:
-    #         logging.error(e)
-    #         await message.answer(f"Ой вей: {e}",parse_mode=None)
+        except Exception as e:
+            logging.error(e)
+            await message.answer(f"Ой вей: {e}",parse_mode=None)
 
 
 async def main() -> None:
