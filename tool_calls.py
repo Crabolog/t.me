@@ -162,9 +162,8 @@ async def search_and_extract(query: str, num_results: int = 3) -> str:
             main_text = ""  # через BeautifulSoup
 
             formatted_results.append(
-                f"Назва: {name}\n Опис: {snippet}\n Текст:\n {main_text}\n"
+                f"Назва: {name}\nURL: {url}\n Опис: {snippet}\n Текст:\n {main_text}\n"
             )
-            print(formatted_results)
         return "\n".join(formatted_results)
 
 
