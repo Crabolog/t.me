@@ -1,4 +1,6 @@
 import json
+import html
+import re
 import sqlite3
 import numpy as np
 import logging
@@ -40,6 +42,13 @@ except Exception as exc:
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
+def to_telegram_html(text: str) -> str:
+    text = html.escape(text, quote=False)                       # & < > -> безопасные сущности
+    text = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", text, flags=re.DOTALL)  # **жирный**
+    text = re.sub(r"(?<!\*)\*(?!\*)", "", text)                  # оставшиеся одиночные *
+    text = text.replace("`", "")                                 # обратные кавычки
+    text = re.sub(r"^#{1,6}\s*", "", text, flags=re.MULTILINE)   # # заголовки
+    return text.strip()
 
 async def get_embeddings_from_db():
     connection = get_connection()

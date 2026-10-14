@@ -1,4 +1,5 @@
 
+from email.mime import message
 import re
 import os
 import json
@@ -10,6 +11,7 @@ import numpy as np
 import subprocess
 import random
 import openai
+import html
 from openai import OpenAI
 from collections import deque
 from aiogram import Bot, Dispatcher, html, F, types, Router
@@ -59,7 +61,8 @@ from functions import (
     delete_embedding_from_db,
     generate_embedding,
     save_embedding,
-    find_similar_messages
+    find_similar_messages,
+    to_telegram_html
 
 )
 
@@ -339,54 +342,53 @@ async def handle_bot_reply(message: types.Message, bot: Bot):
                 )
             })
 
+        input_items = list(messages)
+
+        # Проход 1: модель может вызвать поиск (максимум один вызов)
         response = client.responses.create(
-            input=messages,
+            input=input_items,
             model=model_name,
             tools=tools,
-            # max_output_tokens=max_output_tokens
+            parallel_tool_calls=False,
         )
-        function_called = False
-        tool_outputs = []
-        for tool_call in response.output:
-            if tool_call.type != "function_call":
-                continue
+        logging.info("output types: %s", [o.type for o in response.output])
 
-            function_called = True
-            func_name = tool_call.name
-            args = json.loads(tool_call.arguments)
-            result = await call_function(func_name, args)
+        calls = [o for o in response.output if o.type == "function_call"]
 
-            tool_outputs.append({
-                "call_id": tool_call.call_id,
-                "name": func_name,
-                "output": str(result)
+        if calls:
+            call = calls[0]
+            input_items += response.output  # reasoning + function_call
+
+            try:
+                result = await call_function(call.name, json.loads(call.arguments))
+            except Exception as e:
+                logging.exception("Tool %s failed", call.name)
+                result = f"Помилка інструмента: {e}"
+
+            input_items.append({
+                "type": "function_call_output",
+                "call_id": call.call_id,
+                "output": str(result),
             })
 
-        if function_called:
-            for output in tool_outputs:
-                messages.append({
-                    "role": "user",
-                    "content": f"Результат функції {output['name']}: {output['output']}"
-                })
+            # Проход 2: поиск запрещён, модель обязана ответить текстом
             response = client.responses.create(
-                input=messages,
+                input=input_items,
                 model=model_name,
-                tools=tools
-                # max_output_tokens=max_output_tokens
+                tools=tools,
+                tool_choice="none",
+            )
+            logging.info("final output types: %s", [o.type for o in response.output])
+
+        reply = (response.output_text or "").strip() or "Не вдалося знайти відповідь, спробуй ще раз."
+
+        await message.answer(
+            to_telegram_html(reply),
+            reply_markup=None,
+            parse_mode=ParseMode.HTML,
             )
 
-        reply = response.output_text
-        await message.answer(reply, reply_markup=None, parse_mode=None)
-
-        chat_history.append({
-            "role": "user",
-            "content": f"{cleaned_message_text}"
-        })
-
-        chat_history.append({
-            "role": "assistant",
-            "content": f"{reply}"
-        })
+        chat_history.append({"role": "assistant", "content": f"{reply}"})
 
     except Exception as e:
         logging.error(e)
@@ -490,56 +492,53 @@ async def random_message(message: Message, bot: Bot):
                 "role": "user",
                 "content": f"{cleaned_message_text}"
             })
+            input_items = list(messages)
+
+            # Проход 1: модель может вызвать поиск (максимум один вызов)
             response = client.responses.create(
-                input=messages,
+                input=input_items,
                 model=model_name,
                 tools=tools,
-                # max_output_tokens=max_output_tokens
+                parallel_tool_calls=False,   # не больше одной функции за раз
             )
+            logging.info("output types: %s", [o.type for o in response.output])
 
-            function_called = False
-            tool_outputs = []
+            calls = [o for o in response.output if o.type == "function_call"]
 
-            for tool_call in response.output:
-                if tool_call.type != "function_call":
-                    continue
+            if calls:
+                call = calls[0]
+                input_items += response.output  # reasoning + function_call
 
-                function_called = True
-                func_name = tool_call.name
-                args = json.loads(tool_call.arguments)
+                try:
+                    result = await call_function(call.name, json.loads(call.arguments))
+                except Exception as e:
+                    logging.exception("Tool %s failed", call.name)
+                    result = f"Помилка інструмента: {e}"
 
-                result = await call_function(func_name, args)
-
-                # save for next request
-                tool_outputs.append({
-                    "call_id": tool_call.call_id,
-                    "name": func_name,
-                    "output": str(result)
+                input_items.append({
+                    "type": "function_call_output",
+                    "call_id": call.call_id,
+                    "output": str(result),
                 })
 
-            if function_called:
-                # func results as user messages
-                for output in tool_outputs:
-                    messages.append({
-                        "role": "user",
-                        "content": f"Результат функції {output['name']}: {output['output']}"
-                    })
-
+                # Проход 2: поиск запрещён, модель обязана ответить текстом
                 response = client.responses.create(
-                    input=messages,
+                    input=input_items,
                     model=model_name,
-                    tools=tools
-                    # max_output_tokens=max_output_tokens
+                    tools=tools,
+                    tool_choice="none",
                 )
+                logging.info("final output types: %s", [o.type for o in response.output])
 
-            reply = response.output_text
-
-            await message.answer(reply, reply_markup=None, parse_mode=None)
-
-            chat_history.append({
-                "role": "assistant",
-                "content": f"{reply}"
-            })
+            reply = (response.output_text or "").strip() or "Не вдалося знайти відповідь, спробуй ще раз."
+            
+            await message.answer(
+                to_telegram_html(reply),
+                reply_markup=None,
+                parse_mode=ParseMode.HTML,
+            )
+            
+            chat_history.append({"role": "assistant", "content": f"{reply}"})
 
         except Exception as e:
             logging.error(e)
